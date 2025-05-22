@@ -1,9 +1,9 @@
 #ifndef _DRAW_H_
 #define _DRAW_H_
+#include "raylib.h"
 #include <vector>
 struct circle {
-  int x = 50;
-  int y = 50;
+  Vector2 vec = {50, 50};
   int xdir = 1;
   int ydir = 1;
 };
