@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(RaylibTest)
-add_executable(main src/main.cpp)
+file(GLOB SOURCES "src/*.cpp")
+add_executable(main ${SOURCES})
 
 set(FETCHCONTENT_BASE_DIR "../vendor")
 include(FetchContent)
@@ -9,9 +10,9 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
+####################################################
 # raylib
-#FetchContent_MakeAvailable(raylib)
-
+####################################################
 find_package(raylib QUIET)
 
 set(RAYLIB_VERSION 5.5)
@@ -30,9 +31,37 @@ if (NOT raylib_FOUND)
     set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
   endif()
 endif()
-
-target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(main PRIVATE raylib)
+
+####################################################
+# gtest
+####################################################
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+add_executable(
+  run_test
+  test/test.cpp
+)
+target_link_libraries(
+  run_test
+  GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(run_test)
+
+####################################################
+# linked library setup
+####################################################
+target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/include)
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
 # -lopengl32
