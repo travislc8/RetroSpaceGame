@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include <list>
 
-const int SPEED = 4;
+const int BULLETSPEED = 720;
 
 class Bullets {
   private:

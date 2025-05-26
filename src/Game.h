@@ -2,6 +2,7 @@
 #define _GAME_H_
 #include "Bullets.h"
 #include "Plane.h"
+#include "levels/TestLevel.h"
 #include "raylib.h"
 
 class Game {
@@ -10,6 +11,7 @@ class Game {
     Bullets bullets;
     const int MOVESPEED = 250;
     Plane* plane;
+    Levels::TestLevel level;
 
   public:
     Game();

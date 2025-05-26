@@ -1,11 +1,13 @@
 #include "Game.h"
 #include "Bullets.h"
+#include "levels/TestLevel.h"
 #include "raylib.h"
 
 Game::Game() {
     planeVec.x = 800;
     planeVec.y = 700;
     plane = new Plane(GetScreenWidth(), GetScreenHeight());
+    level = Levels::TestLevel();
 }
 
 Game::~Game() { delete plane; }
@@ -15,6 +17,8 @@ void Game::Draw() {
     bullets.Update();
     bullets.Draw();
     plane->Draw();
+    level.Update();
+    level.Draw();
 }
 
 void Game::KeyInput() {

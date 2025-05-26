@@ -24,7 +24,7 @@ void Bullets::Update() {
     }
 }
 
-void Bullets::Bullet::Update() { rect.y -= 12; }
+void Bullets::Bullet::Update() { rect.y -= GetFrameTime() * BULLETSPEED; }
 
 void Bullets::Draw() {
     for (auto bullet : bullets) {

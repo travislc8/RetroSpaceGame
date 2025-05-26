@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(RaylibTest)
-file(GLOB SOURCES  src/*.cpp )
+file(GLOB SOURCES src/levels/*.cpp src/Enemy.cpp src/*.cpp )
 add_executable(main ${SOURCES})
 
 set(FETCHCONTENT_BASE_DIR "../vendor")
