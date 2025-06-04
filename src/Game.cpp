@@ -1,23 +1,32 @@
 #include "Game.h"
-#include "Bullets.h"
-#include "levels/TestLevel.h"
+#include "Components/Bullet.h"
+#include "Components/Bullets.h"
+#include "Components/Enemy.h"
+#include "Levels/TestLevel.h"
 #include "raylib.h"
+#include <list>
 
 Game::Game() {
-    planeVec.x = 800;
-    planeVec.y = 700;
-    plane = new Plane(GetScreenWidth(), GetScreenHeight());
+    plane = new Components::Plane(GetScreenWidth(), GetScreenHeight());
     level = Levels::TestLevel();
+    background = Components::Background();
 }
 
 Game::~Game() { delete plane; }
 
-void Game::Draw() {
+void Game::Update() {
     KeyInput();
     bullets.Update();
+    level.Update();
+    CheckBullets();
+    CheckBombs();
+}
+
+void Game::Draw() {
+    background.Draw();
     bullets.Draw();
     plane->Draw();
-    level.Update();
+    // level.Update();
     level.Draw();
 }
 
@@ -33,51 +42,17 @@ void Game::KeyInput() {
     }
 }
 
-// 60x50
-void Game::DrawPlane() {
-    DrawRectangle(planeVec.x - 12, planeVec.y + 34, 8, 12, RED);
-    DrawRectangle(planeVec.x + 6, planeVec.y + 34, 8, 12, RED);
+void Game::CheckBullets() {
+    std::list<Components::Bullet*> bulletList = bullets.GetBullets();
+    std::list<Components::Enemy*> enemyList = level.GetEnemyList();
+    for (auto bullet : bulletList) {
+        for (auto enemy : enemyList) {
+            if (CheckCollisionRecs(bullet->hitbox, enemy->hitbox)) {
+                bullets.Remove(bullet);
+                level.Remove(enemy);
+            }
+        }
+    }
+};
 
-    // body
-    DrawRectangle(planeVec.x - 2, planeVec.y + 0, 4, 10, WHITE);
-    DrawRectangle(planeVec.x - 6, planeVec.y + 10, 12, 10, WHITE);
-    DrawRectangle(planeVec.x - 10, planeVec.y + 20, 20, 14, WHITE);
-    DrawRectangle(planeVec.x - 6, planeVec.y + 34, 12, 10, WHITE);
-    DrawRectangle(planeVec.x - 2, planeVec.y + 44, 4, 10, WHITE);
-
-    // wings
-    DrawRectangle(planeVec.x - 14, planeVec.y + 24, 4, 14, WHITE);
-    DrawRectangle(planeVec.x - 18, planeVec.y + 28, 4, 10, WHITE);
-    DrawRectangle(planeVec.x - 22, planeVec.y + 32, 4, 10, WHITE);
-    DrawRectangle(planeVec.x - 26, planeVec.y + 36, 4, 10, WHITE);
-    DrawRectangle(planeVec.x - 30, planeVec.y + 40, 4, 10, WHITE);
-
-    DrawRectangle(planeVec.x + 10, planeVec.y + 24, 4, 14, WHITE);
-    DrawRectangle(planeVec.x + 14, planeVec.y + 28, 4, 10, WHITE);
-    DrawRectangle(planeVec.x + 18, planeVec.y + 32, 4, 10, WHITE);
-    DrawRectangle(planeVec.x + 22, planeVec.y + 36, 4, 10, WHITE);
-    DrawRectangle(planeVec.x + 26, planeVec.y + 40, 4, 10, WHITE);
-
-    // cockpit
-    DrawRectangle(planeVec.x - 2, planeVec.y + 20, 4, 8, RED);
-    DrawRectangle(planeVec.x - 6, planeVec.y + 24, 4, 8, RED);
-    DrawRectangle(planeVec.x + 2, planeVec.y + 24, 4, 8, RED);
-
-    // blue dots
-    DrawRectangle(planeVec.x - 14, planeVec.y + 20, 4, 4, BLUE);
-    DrawRectangle(planeVec.x + 10, planeVec.y + 20, 4, 4, BLUE);
-
-    DrawRectangle(planeVec.x - 18, planeVec.y + 24, 4, 4, BLUE);
-    DrawRectangle(planeVec.x + 14, planeVec.y + 24, 4, 4, BLUE);
-
-    // guns
-    DrawRectangle(planeVec.x - 18, planeVec.y + 16, 4, 8, WHITE);
-    DrawRectangle(planeVec.x + 14, planeVec.y + 16, 4, 8, WHITE);
-    DrawRectangle(planeVec.x - 18, planeVec.y + 10, 4, 6, RED);
-    DrawRectangle(planeVec.x + 14, planeVec.y + 10, 4, 6, RED);
-
-    DrawRectangle(planeVec.x - 30, planeVec.y + 28, 4, 12, WHITE);
-    DrawRectangle(planeVec.x + 26, planeVec.y + 28, 4, 12, WHITE);
-    DrawRectangle(planeVec.x - 30, planeVec.y + 22, 4, 6, RED);
-    DrawRectangle(planeVec.x + 26, planeVec.y + 22, 4, 6, RED);
-}
+void Game::CheckBombs() {}

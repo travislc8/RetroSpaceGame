@@ -1,6 +1,8 @@
 #ifndef _PLANE_H_
 #define _PLANE_H_
+#include "Enemy.h"
 #include "raylib.h"
+namespace Components {
 class Plane {
   private:
     int planeWidth, planeHeight;
@@ -17,5 +19,6 @@ class Plane {
     void Draw();
     Vector2 GetLocation();
 };
+} // namespace Components
 
 #endif

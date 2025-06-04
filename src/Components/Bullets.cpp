@@ -1,6 +1,7 @@
 #include "Bullets.h"
 #include "raylib.h"
-#include <iostream>
+
+using namespace Components;
 
 Bullets::Bullets() { lastShot = 0; }
 Bullets::~Bullets() {
@@ -10,11 +11,12 @@ Bullets::~Bullets() {
     bullets.clear();
 }
 
-Bullets::Bullet::Bullet(Vector2 loc) { rect = Rectangle{loc.x, loc.y, 8, 10}; }
-
 void Bullets::Update() {
     for (auto it = bullets.begin(); it != bullets.end();) {
-        if ((*it)->rect.y < 0) {
+        if ((*it)->hitbox.y < 0) {
+            delete *it;
+            it = bullets.erase(it);
+        } else if ((*it)->ShouldDestroy()) {
             delete *it;
             it = bullets.erase(it);
         } else {
@@ -24,13 +26,21 @@ void Bullets::Update() {
     }
 }
 
-void Bullets::Bullet::Update() { rect.y -= GetFrameTime() * BULLETSPEED; }
-
 void Bullets::Draw() {
     for (auto bullet : bullets) {
-        DrawRectangle(bullet->rect.x - 4, bullet->rect.y, 5, 4, RED);
-        DrawRectangle(bullet->rect.x - 4, bullet->rect.y + 2, 5, 4, BLUE);
+        bullet->Draw();
     }
 }
 
 void Bullets::Add(Vector2 vec) { bullets.push_back(new Bullet(vec)); }
+
+std::list<Bullet*> Bullets::GetBullets() { return bullets; }
+
+void Bullets::Remove(Bullet* rbullet) {
+    for (auto lbullet : bullets) {
+        if (rbullet == lbullet) {
+            lbullet->SetDestroy();
+            break;
+        }
+    }
+}

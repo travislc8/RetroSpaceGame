@@ -1,19 +1,13 @@
 #ifndef _BULLETS_H_
 #define _BULLETS_H_
+#include "Bullet.h"
 #include "raylib.h"
 #include <list>
 
-const int BULLETSPEED = 720;
+namespace Components {
 
 class Bullets {
   private:
-    class Bullet {
-      private:
-      public:
-        Bullet(Vector2);
-        Rectangle rect;
-        void Update();
-    };
     std::list<Bullet*> bullets;
     double lastShot;
 
@@ -23,5 +17,8 @@ class Bullets {
     void Update();
     void Draw();
     void Add(Vector2);
+    std::list<Bullet*> GetBullets();
+    void Remove(Bullet*);
 };
+} // namespace Components
 #endif

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(RaylibTest)
-file(GLOB SOURCES src/levels/*.cpp src/Enemy.cpp src/*.cpp )
+
+file(GLOB SOURCES src/Logic/*.cpp src/Levels/*.cpp  src/Components/*.cpp src/*.cpp)
 add_executable(main ${SOURCES})
 
 set(FETCHCONTENT_BASE_DIR "../vendor")
@@ -77,3 +78,5 @@ target_link_libraries(main PRIVATE OpenGL::GL)
 
 #-lopengl32 -lgdi32 -lwinmm
 
+# Define a macro globally
+add_compile_definitions(MODE=1)

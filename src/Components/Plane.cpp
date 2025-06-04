@@ -1,6 +1,9 @@
 #include "Plane.h"
 #include "raylib.h"
-#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+
+using namespace Components;
 
 Plane::Plane(int screen_width, int screen_height) {
     Image img = LoadImage("../src/assets/plane.png");
@@ -15,7 +18,7 @@ Plane::Plane(int screen_width, int screen_height) {
     maxX = screen_width - (planeWidth / 2);
     minX = 0 + planeWidth / 2;
     points = new Vector2[3];
-    points[0] = Vector2{800, 700};
+    points[0] = Vector2{(float)planeWidth, (float)screen_height - planeHeight - 50};
     points[1] = Vector2{points[0].x - (planeWidth / 2.0f), points[0].y + planeHeight};
     points[2] = Vector2{points[0].x + (planeWidth / 2.0f), points[0].y + planeHeight};
 }
@@ -63,7 +66,9 @@ void Plane::Draw() {
         exit(3);
     }
     DrawTexture(plane, points[0].x - (planeWidth / 2.0f) - 1, points[0].y, WHITE);
+#if MODE == 1
     DrawTriangle(points[0], points[1], points[2], BLUE);
+#endif
 }
 
 Vector2 Plane::GetLocation() { return points[0]; }
