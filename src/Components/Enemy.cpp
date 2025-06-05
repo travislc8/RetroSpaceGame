@@ -69,65 +69,97 @@ void Enemy::MoveTo(Vector2 vec) {
 }
 
 void Enemy::MoveState0() {
-    // pointIndex = entryPath->GetTargetPoint(location, direction, pointIndex);
     if (pointIndex == -1) {
         state = 2;
         MoveState2();
     } else {
         fprintf(stderr, "\nlocation1: %f,%f", location.x, location.y);
         direction = entryPath->GetDirection(location, pointIndex);
-        SetLocation(entryPath->GetMoveLocation(location, pointIndex, ENEMYSPEED));
+        SetLocation(entryPath->GetMoveLocation(location, pointIndex, ENEMYSPEED * GetFrameTime()));
         fprintf(stderr, "\nend direction: %f,%f", direction.x, direction.y);
         fprintf(stderr, "\nlocation2: %f,%f", location.x, location.y);
+#if MODE == 1
         entryPath->ShowPath();
+#endif
     }
-    /*
-if (pointIndex == -1) {
-    state = 2;
-    MoveState2();
-} else {
-    direction = Vector2Normalize(Vector2{entryPath->GetPoint(pointIndex).x - location.x,
-                                         entryPath->GetPoint(pointIndex).y - location.y});
-    MoveAmount(direction);
-}
-    */
 }
 
 void Enemy::SetEntryPath(Logic::Path* path) { entryPath = path; }
 
 void Enemy::MoveState2() {
     float dir_angle = std::atan2(direction.y, direction.x);
+    fprintf(stderr, "\ndir_angleS %f", dir_angle);
     float target_angel =
         std::atan2(GetGridLocationY() - location.y, GetGridLocationX() - location.x);
-    // fprintf(stderr, "\ntarget: %f, direction: %f", target_angel, dir_angle);
 
     float dif_angle = target_angel - dir_angle;
-#if MODE == 1
-    DrawLine(location.x, location.y, location.x + std::cos(target_angel) * 20,
-             location.y + std::sin(target_angel) * 20, ORANGE);
-    DrawLine(location.x, location.y, location.x + std::cos(dir_angle) * 20,
-             location.y + std::sin(dir_angle) * 20, BLUE);
+    fprintf(stderr, "\n\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
 
+    Color color;
+    if (dif_angle > 3.14159) {
+        color = BLUE;
+        // left
+        dif_angle = -6.283 + dif_angle;
+        fprintf(stderr, "\nCheck1");
+        assert(dif_angle <= 0);
+        assert(dif_angle > -3.1415);
+    } else if (dif_angle < -3.14159) {
+        color = RED;
+        // right
+        dif_angle = 6.283 + dif_angle;
+        fprintf(stderr, "\nCheck2");
+        assert(dif_angle >= 0);
+        assert(dif_angle <= 3.1415);
+    } else if (dif_angle < 0) {
+        color = LIGHTGRAY;
+        // left
+        fprintf(stderr, "\nCheck3");
+        assert(dif_angle <= 0);
+        assert(dif_angle > -3.1415);
+    } else { // dif_angle > 0
+        color = PINK;
+        assert(dif_angle >= 0);
+        assert(dif_angle < 3.1415);
+        // right
+        fprintf(stderr, "\nCheck4");
+    }
+
+#if MODE == 1
+    DrawCircle(location.x, location.y, 20, color);
 #endif
-    fprintf(stderr, "\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
-    if (std::abs(dif_angle) > TURNSPEED) {
+
+    if (dif_angle < (-1 * TURNSPEED)) {
+        dif_angle = -TURNSPEED;
+        fprintf(stderr, "\ncap");
+        color = GREEN;
+    } else if (dif_angle > TURNSPEED) {
         dif_angle = TURNSPEED;
         fprintf(stderr, "\ncap");
+        color = BLUE;
     }
+
     dir_angle += dif_angle;
-    fprintf(stderr, "new dir: %f", dir_angle);
+    fprintf(stderr, "\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
+
+#if MODE == 1
+    DrawCircle(location.x, location.y, 10, color);
+    DrawLine(location.x, location.y, location.x + std::cos(target_angel) * 20,
+             location.y + std::sin(target_angel) * 20, ORANGE);
+    DrawLine(location.x, location.y, location.x + std::cos(dir_angle) * 40,
+             location.y + std::sin(dir_angle) * 40, BLUE);
+
+#endif
 
     float distance =
         std::pow(location.y - GetGridLocationY(), 2) + std::pow(location.x - GetGridLocationX(), 2);
     fprintf(stderr, "\nd to grid: %f", distance);
-    if (distance < std::pow(ENEMYSPEED * GetFrameTime(), 2)) {
+
+    if (distance < std::pow(ENEMYSPEED * 2 * GetFrameTime(), 2)) {
         state = 1;
         LocateInGrid();
     } else {
         direction = Vector2Normalize(Vector2{std::cos(dir_angle), std::sin(dir_angle)});
-        // fprintf(stderr, "\nlocation: %f,%f", location.x, location.y);
-        // fprintf(stderr, "\ntarget: %f,%f", gridLocation.x, gridLocation.y);
-        // fprintf(stderr, "\ndirection: %f,%f", direction.x, direction.y);
+        fprintf(stderr, "direction: %f,%f", direction.x, direction.y);
         MoveAmount(direction);
     }
 }

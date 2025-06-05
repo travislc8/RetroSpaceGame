@@ -32,6 +32,7 @@ class TestLevel {
     void ShiftEnemy();
     void UpdateGridPosition();
     void SetEnemyEntryPath();
+    void AddEnemy();
 
   public:
     TestLevel();

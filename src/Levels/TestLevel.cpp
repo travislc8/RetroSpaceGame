@@ -13,29 +13,11 @@ TestLevel::TestLevel() {
     startTime = GetTime();
     lastShiftTime = GetTime();
     SetEnemyEntryPath();
-    /*
-    for (int i = 0; i < columnCount; i++) {
-        for (int j = 0; j < rowCount; j++) {
-            Components::Enemy* enemy =
-                new Components::Enemy(LocationInGrid{j, i, gridVector.x, gridVector.y},
-                                      Vector2{(float)ENEMYSPACING * j, (float)ENEMYSPACING * i});
-            enemy->SetLocation(Vector2{0, 0});
-            enemyList.push_back(enemy);
-        }
-    }
-    */
-    Components::Enemy* enemy =
-        new Components::Enemy(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
-                                                 (float)(ENEMYSPACING * gridState.row)});
-    enemy->SetEntryPath(enemyEntryPath);
-    enemy->SetLocation(Vector2{0, 0});
-    enemyList.push_back(enemy);
-    gridState.x += ENEMYSPACING;
-    gridState.column += 1;
-    lastSpawnTime = GetTime();
+    AddEnemy();
 }
 
 TestLevel::~TestLevel() {
+    // delete enemyEntryPath;
     /*
     for (auto point : enemyEntryPath) {
         delete point;
@@ -58,16 +40,9 @@ void TestLevel::Update() {
             gridState.y += ENEMYSPACING;
             gridState.x = gridVector.x;
         }
+
         if (gridState.row < 3) {
-            Components::Enemy* enemy =
-                new Components::Enemy(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
-                                                         (float)(ENEMYSPACING * gridState.row)});
-            enemy->SetEntryPath(enemyEntryPath);
-            enemy->SetLocation(Vector2{0, 0});
-            enemyList.push_back(enemy);
-            gridState.x += ENEMYSPACING;
-            gridState.column += 1;
-            lastSpawnTime = GetTime();
+            AddEnemy();
         }
     }
     if ((GetTime() - lastShiftTime) > .5f) {
@@ -116,15 +91,20 @@ void TestLevel::UpdateGridPosition() {
 void TestLevel::SetEnemyEntryPath() {
     std::vector<Vector2> vec;
     vec.push_back(Vector2{100, 100});
-    vec.push_back(Vector2{200, 200});
-    vec.push_back(Vector2{300, 300});
     vec.push_back(Vector2{400, 400});
-    /*
+    vec.push_back(Vector2{405, 395});
+    vec.push_back(Vector2{415, 385});
+    vec.push_back(Vector2{415, 375});
+    vec.push_back(Vector2{405, 365});
+    vec.push_back(Vector2{395, 375});
+    vec.push_back(Vector2{385, 385});
+    vec.push_back(Vector2{385, 395});
     vec.push_back(Vector2{500, 300});
     vec.push_back(Vector2{400, 200});
     vec.push_back(Vector2{300, 300});
     vec.push_back(Vector2{400, 400});
-    vec.push_back(Vector2{500, 300});
+    vec.push_back(Vector2{500, 000});
+    /*
     vec.push_back(Vector2{400, 200});
     vec.push_back(Vector2{300, 300});
     vec.push_back(Vector2{400, 400});
@@ -133,4 +113,16 @@ void TestLevel::SetEnemyEntryPath() {
     vec.push_back(Vector2{300, 300});
     */
     enemyEntryPath = new Logic::Path(vec);
+}
+
+void TestLevel::AddEnemy() {
+    Components::Enemy* enemy =
+        new Components::Enemy(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
+                                                 (float)(ENEMYSPACING * gridState.row)});
+    enemy->SetEntryPath(enemyEntryPath);
+    enemy->SetLocation(Vector2{0, 0});
+    enemyList.push_back(enemy);
+    gridState.x += ENEMYSPACING;
+    gridState.column += 1;
+    lastSpawnTime = GetTime();
 }

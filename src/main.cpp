@@ -13,7 +13,7 @@ int main() {
 
     Game* game = new Game();
     while (!WindowShouldClose()) {
-        if (!IsKeyDown(KEY_P)) {
+        if (!IsKeyPressed(KEY_P)) {
             BeginDrawing();
             ClearBackground(BLACK);
             game->Update();

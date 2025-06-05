@@ -90,23 +90,26 @@ void Path::ShowPath() {
 }
 
 Vector2 Path::GetMoveLocation(Vector2 currentLoc, int& nextPoint, int distance) {
-    Vector2 result;
+    Vector2 result = currentLoc;
+    fprintf(stderr, "\nstart distance: %d", distance);
     while (distance > 0) {
-        fprintf(stderr, "\npoint %d", nextPoint);
+        fprintf(stderr, "\npoint %d - %f,%f", nextPoint, points[nextPoint].x, points[nextPoint].y);
         float distance_squared = std::pow((points[nextPoint].x - currentLoc.x), 2) +
                                  std::pow((points[nextPoint].y - currentLoc.y), 2);
-        if (distance_squared > std::pow(distance, 2) && nextPoint < points.size() - 1) {
-            // TODO
-            fprintf(stderr, "\noverlap");
-            distance -= std::sqrt(distance_squared);
+        float distance_to_point = std::sqrt(distance_squared);
+        if (distance > distance_to_point && nextPoint < points.size() - 1) {
+            distance -= distance_to_point;
+            currentLoc = points[nextPoint];
             nextPoint++;
+            fprintf(stderr, "\noverlap - distance: %d", distance);
+
         } else {
             fprintf(stderr, "\nGetting Point");
             Vector2 direction = Vector2Normalize(
                 Vector2{points[nextPoint].x - currentLoc.x, points[nextPoint].y - currentLoc.y});
             fprintf(stderr, "\ndirection2: %f,%f", direction.x, direction.y);
-            result.x = currentLoc.x + (direction.x * distance * GetFrameTime());
-            result.y = currentLoc.y + (direction.y * distance * GetFrameTime());
+            result.x = currentLoc.x + (direction.x * distance);
+            result.y = currentLoc.y + (direction.y * distance);
             fprintf(stderr, "\nresult: %f,%f", result.x, result.y);
             distance = 0;
             nextPoint = GetTargetPoint(result, direction, nextPoint);

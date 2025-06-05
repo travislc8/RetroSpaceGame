@@ -9,7 +9,7 @@
 #define ENEMYWIDTH 20
 #define ENEMYHEIGHT 20
 #define ENEMYSPEED 250
-#define TURNSPEED .2f
+#define TURNSPEED .1f
 
 namespace Components {
 
