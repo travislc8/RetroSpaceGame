@@ -4,7 +4,7 @@
 
 int main() {
     // InitWindow(GetScreenWidth(), GetScreenHeight(), "Raylib Test");
-    InitWindow(800, 600, "Raylib Test");
+    InitWindow(1200, 700, "Raylib Test");
     SetTargetFPS(60);
     // ToggleFullscreen();
     HideCursor();

@@ -6,6 +6,8 @@
 #include <stdio.h>
 
 namespace Logic {
+Path::Path() {}
+
 Path::Path(std::vector<Vector2> points) {
     for (auto point : points) {
         this->points.push_back(Vector2{point.x, point.y});

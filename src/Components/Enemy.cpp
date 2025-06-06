@@ -13,31 +13,84 @@
 using namespace Components;
 
 Enemy::Enemy(Levels::LocationInGrid gridLocation, Vector2 offset) {
+    Image img = LoadImage("../src/assets/butterfly.png");
+    ImageResize(&img, ENEMYWIDTH, ENEMYHEIGHT);
+    images[0] = LoadTextureFromImage(img);
+    UnloadImage(img);
+
+    Image img2 = LoadImage("../src/assets/butterfly2.png");
+    ImageResize(&img2, ENEMYWIDTH, ENEMYHEIGHT);
+    images[1] = LoadTextureFromImage(img2);
+    UnloadImage(img2);
+    assert(images[0].id != 0);
+    assert(images[1].id != 0);
+
     this->offset = offset;
     this->gridLocation = gridLocation;
     LocateInGrid();
     hitbox = Rectangle{location.x, location.y, ENEMYWIDTH, ENEMYHEIGHT};
-    state = 0;
+    state = 3;
     direction = Vector2Normalize(Vector2{1, 1});
     moving = true;
+    src = Rectangle{0, 0, (float)images[0].width, (float)images[0].height};
+    dest = Rectangle{0, 0, (float)images[0].width, (float)images[0].height};
+    origin = Vector2{(float)images[0].width / 2.0f, (float)images[0].height / 2.0f};
 }
 
-Enemy::~Enemy() {}
+Enemy::~Enemy() {
+    for (auto texture : images) {
+        UnloadTexture(texture);
+    };
+}
 
-void Enemy::Draw() { DrawRectangleRec(hitbox, RED); }
+void Enemy::Draw() {
+    if (state != 3) {
+#if MODE == 1
+        DrawRectangleRec(hitbox, RED);
+#endif
+        if (GetTime() - imageTime > .5f) {
+            if (imageIndex == 1) {
+                imageIndex = 0;
+            } else {
+                imageIndex = 1;
+            }
+            imageTime = GetTime();
+        }
+
+        dest.x = location.x;
+        dest.y = location.y;
+        dest.x += (float)images[0].width / 2.0f;
+        dest.y += (float)images[0].height / 2.0f;
+        float rotation = std::atan2(direction.y, direction.x);
+        rotation = rotation * (180 / 3.14159) + 90;
+        if (rotation < 0) {
+            rotation = 360 + rotation;
+        }
+        if (images[imageIndex].id == 0) {
+            DrawRectangleRec(hitbox, ORANGE);
+        } else {
+            DrawTexturePro(images[imageIndex], src, dest, origin, rotation, WHITE);
+        }
+        // DrawTexture(images[imageIndex], location.x, location.y, WHITE);
+    }
+}
 
 void Enemy::SetLocation(Vector2 location) { MoveTo(location); }
 
 void Enemy::Update() {
+    // TODO change to an enum for switch
     // 0 - entry path
     // 1 - move with grid
     // 2 - go to grid
+    // 3 - not spawned
     if (state == 0) {
         MoveState0();
     } else if (state == 1) {
         LocateInGrid();
     } else if (state == 2) {
         MoveState2();
+    } else if (state == 3) {
+        MoveState3();
     }
 }
 
@@ -51,14 +104,15 @@ void Enemy::LocateInGrid() {
     this->location.y = gridLocation.y + offset.y;
     hitbox.x = location.x;
     hitbox.y = location.y;
+
+    direction = Vector2{0, -1};
 }
 
 void Enemy::MoveAmount(Vector2 vec) {
-    location.x += vec.x * ENEMYSPEED * GetFrameTime();
-    location.y += vec.y * ENEMYSPEED * GetFrameTime();
+    location.x += vec.x * physics->GetSpeed() * GetFrameTime();
+    location.y += vec.y * physics->GetSpeed() * GetFrameTime();
     hitbox.x = location.x;
     hitbox.y = location.y;
-    fprintf(stderr, "\nnew x: %f", location.x);
 }
 
 void Enemy::MoveTo(Vector2 vec) {
@@ -74,17 +128,19 @@ void Enemy::MoveState0() {
         MoveState2();
     } else {
         fprintf(stderr, "\nlocation1: %f,%f", location.x, location.y);
+        fprintf(stderr, "\nspeed: %d", physics->GetSpeed());
         direction = entryPath->GetDirection(location, pointIndex);
-        SetLocation(entryPath->GetMoveLocation(location, pointIndex, ENEMYSPEED * GetFrameTime()));
-        fprintf(stderr, "\nend direction: %f,%f", direction.x, direction.y);
-        fprintf(stderr, "\nlocation2: %f,%f", location.x, location.y);
+        SetLocation(
+            entryPath->GetMoveLocation(location, pointIndex, physics->GetSpeed() * GetFrameTime()));
 #if MODE == 1
         entryPath->ShowPath();
+        fprintf(stderr, "\nend direction: %f,%f", direction.x, direction.y);
+        fprintf(stderr, "\nlocation2: %f,%f", location.x, location.y);
 #endif
     }
 }
 
-void Enemy::SetEntryPath(Logic::Path* path) { entryPath = path; }
+void Enemy::SetEntryPath(std::shared_ptr<Logic::Path> path) { entryPath = path; }
 
 void Enemy::MoveState2() {
     float dir_angle = std::atan2(direction.y, direction.x);
@@ -128,20 +184,18 @@ void Enemy::MoveState2() {
     DrawCircle(location.x, location.y, 20, color);
 #endif
 
-    if (dif_angle < (-1 * TURNSPEED)) {
-        dif_angle = -TURNSPEED;
-        fprintf(stderr, "\ncap");
+    if (dif_angle < (-1 * physics->GetTurnSpeed())) {
+        dif_angle = -physics->GetTurnSpeed();
         color = GREEN;
-    } else if (dif_angle > TURNSPEED) {
-        dif_angle = TURNSPEED;
-        fprintf(stderr, "\ncap");
+    } else if (dif_angle > physics->GetTurnSpeed()) {
+        dif_angle = physics->GetTurnSpeed();
         color = BLUE;
     }
 
     dir_angle += dif_angle;
-    fprintf(stderr, "\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
 
 #if MODE == 1
+    fprintf(stderr, "\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
     DrawCircle(location.x, location.y, 10, color);
     DrawLine(location.x, location.y, location.x + std::cos(target_angel) * 20,
              location.y + std::sin(target_angel) * 20, ORANGE);
@@ -154,7 +208,7 @@ void Enemy::MoveState2() {
         std::pow(location.y - GetGridLocationY(), 2) + std::pow(location.x - GetGridLocationX(), 2);
     fprintf(stderr, "\nd to grid: %f", distance);
 
-    if (distance < std::pow(ENEMYSPEED * 2 * GetFrameTime(), 2)) {
+    if (distance < std::pow(physics->GetSpeed() * 2 * GetFrameTime(), 2)) {
         state = 1;
         LocateInGrid();
     } else {
@@ -166,3 +220,14 @@ void Enemy::MoveState2() {
 
 float Enemy::GetGridLocationX() { return gridLocation.x + offset.x; }
 float Enemy::GetGridLocationY() { return gridLocation.y + offset.y; }
+
+void Enemy::Spawn() { this->state = 0; };
+
+void Enemy::SetSpawnTime(float time) { this->spawnTime = time; };
+
+void Enemy::MoveState3() {
+    if (spawnTime < GetTime()) {
+        state = 0;
+        MoveState0();
+    }
+}

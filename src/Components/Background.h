@@ -13,7 +13,7 @@ class Background {
     short state = 0;
 
   public:
-    Background();
+    Background(float, float);
     void Draw();
 };
 } // namespace Components

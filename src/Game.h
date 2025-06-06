@@ -4,16 +4,20 @@
 #include "Components/Bullets.h"
 #include "Components/Plane.h"
 #include "Levels/TestLevel.h"
+#include "Scoreboard.h"
 #include "raylib.h"
 
 #define MOVESPEED 250
+#define SCOREBOARDSIZE 300
 class Game {
   private:
     Vector2 planeVec;
     Components::Bullets bullets;
     Components::Plane* plane;
-    Levels::TestLevel level;
-    Components::Background background;
+    Levels::TestLevel* level;
+    Components::Background* background;
+    float gameWidth, gameHeight;
+    Scoreboard* scoreboard;
 
     void DrawPlane();
     void KeyInput();

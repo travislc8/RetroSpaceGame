@@ -6,9 +6,10 @@
 #include "LevelUtils.h"
 #include "raylib.h"
 #include <list>
+#include <memory>
 #include <vector>
 
-#define ENEMYSPACING 30
+#define ENEMYSPACING 40
 #define GRIDSHIFTSPEED 24
 
 namespace Levels {
@@ -26,16 +27,20 @@ class TestLevel {
     int columnCount = 2;
     std::list<Components::Enemy*> enemyList;
     short gridDirection = 1;
+    int spawnCount = 0;
 
-    Logic::Path* enemyEntryPath;
+    std::shared_ptr<Logic::Path> enemyEntryPath = std::make_shared<Logic::Path>();
+    std::shared_ptr<Logic::Path> enemyEntryPath2 = std::make_shared<Logic::Path>();
 
     void ShiftEnemy();
     void UpdateGridPosition();
     void SetEnemyEntryPath();
-    void AddEnemy();
+    void AddEnemy(std::shared_ptr<Logic::Physics>);
+    void SetEnemy();
+    void SpawnEnemy();
 
   public:
-    TestLevel();
+    TestLevel(float, float);
     ~TestLevel();
     void Update();
     void Draw();

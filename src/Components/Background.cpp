@@ -2,15 +2,15 @@
 #include "raylib.h"
 
 namespace Components {
-Background::Background() {
+Background::Background(float screenWidth, float screenHeight) {
     SetRandomSeed(35);
     for (int i = 0; i < STARCOUNT; i++) {
-        stars1[i] = Vector2{(float)GetRandomValue(0, GetScreenWidth()),
-                            (float)GetRandomValue(0, GetScreenHeight())};
+        stars1[i] =
+            Vector2{(float)GetRandomValue(0, screenWidth), (float)GetRandomValue(0, screenHeight)};
     }
     for (int i = 0; i < STARCOUNT; i++) {
-        stars2[i] = Vector2{(float)GetRandomValue(0, GetScreenWidth()),
-                            (float)GetRandomValue(0, GetScreenHeight())};
+        stars2[i] =
+            Vector2{(float)GetRandomValue(0, screenWidth), (float)GetRandomValue(0, screenHeight)};
     }
     lastRedraw = GetTime();
 }

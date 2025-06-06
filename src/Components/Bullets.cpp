@@ -32,7 +32,10 @@ void Bullets::Draw() {
     }
 }
 
-void Bullets::Add(Vector2 vec) { bullets.push_back(new Bullet(vec)); }
+void Bullets::Add(Vector2 vec) {
+    if (bullets.size() < 2)
+        bullets.push_back(new Bullet(vec));
+}
 
 std::list<Bullet*> Bullets::GetBullets() { return bullets; }
 

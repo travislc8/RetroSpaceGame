@@ -2,28 +2,35 @@
 #include "../Components/Enemy.h"
 #include "LevelUtils.h"
 #include "raylib.h"
+#include <iterator>
+#include <memory>
 #include <vector>
 
 using namespace Levels;
-TestLevel::TestLevel() {
-    maxGridX = GetScreenWidth() - 50 - (rowCount * ENEMYSPACING);
+TestLevel::TestLevel(float width, float height) {
+#if MODE == 1
+    fprintf(stderr, "\nTestLevelStart");
+#endif
+    maxGridX = width - 50 - (rowCount * ENEMYSPACING);
     minGridX = 0 + 50.0f;
     gridState = LocationInGrid{0, 0, minGridX, 50.0f};
     gridVector = Vector2{minGridX, 50.0f};
     startTime = GetTime();
     lastShiftTime = GetTime();
     SetEnemyEntryPath();
-    AddEnemy();
+    SetEnemy();
+    lastSpawnTime = GetTime();
+
+#if MODE == 1
+    fprintf(stderr, "\nTestLevel End");
+#endif
 }
 
 TestLevel::~TestLevel() {
-    // delete enemyEntryPath;
-    /*
-    for (auto point : enemyEntryPath) {
-        delete point;
+    for (auto enemy : enemyList) {
+        delete enemy;
     }
-    enemyEntryPath.clear();
-    */
+    enemyList.clear();
 }
 
 void TestLevel::Draw() {
@@ -33,18 +40,6 @@ void TestLevel::Draw() {
 }
 
 void TestLevel::Update() {
-    if (GetTime() - lastSpawnTime > 0.5f) {
-        if (gridState.column > 8) {
-            gridState.column = 0;
-            gridState.row += 1;
-            gridState.y += ENEMYSPACING;
-            gridState.x = gridVector.x;
-        }
-
-        if (gridState.row < 3) {
-            AddEnemy();
-        }
-    }
     if ((GetTime() - lastShiftTime) > .5f) {
         lastShiftTime = GetTime();
         UpdateGridPosition();
@@ -92,37 +87,51 @@ void TestLevel::SetEnemyEntryPath() {
     std::vector<Vector2> vec;
     vec.push_back(Vector2{100, 100});
     vec.push_back(Vector2{400, 400});
-    vec.push_back(Vector2{405, 395});
-    vec.push_back(Vector2{415, 385});
-    vec.push_back(Vector2{415, 375});
-    vec.push_back(Vector2{405, 365});
-    vec.push_back(Vector2{395, 375});
-    vec.push_back(Vector2{385, 385});
-    vec.push_back(Vector2{385, 395});
-    vec.push_back(Vector2{500, 300});
-    vec.push_back(Vector2{400, 200});
-    vec.push_back(Vector2{300, 300});
-    vec.push_back(Vector2{400, 400});
-    vec.push_back(Vector2{500, 000});
-    /*
-    vec.push_back(Vector2{400, 200});
-    vec.push_back(Vector2{300, 300});
-    vec.push_back(Vector2{400, 400});
-    vec.push_back(Vector2{500, 300});
-    vec.push_back(Vector2{400, 200});
-    vec.push_back(Vector2{300, 300});
-    */
-    enemyEntryPath = new Logic::Path(vec);
+    vec.push_back(Vector2{401, 540});
+    enemyEntryPath->SetPath(vec);
+
+    std::vector<Vector2> vec2;
+    vec2.push_back(Vector2{130, 70});
+    vec2.push_back(Vector2{430, 370});
+    vec2.push_back(Vector2{431, 500});
+
+    enemyEntryPath2->SetPath(vec2);
 }
 
-void TestLevel::AddEnemy() {
+void TestLevel::AddEnemy(std::shared_ptr<Logic::Physics> physics) {
     Components::Enemy* enemy =
         new Components::Enemy(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
                                                  (float)(ENEMYSPACING * gridState.row)});
-    enemy->SetEntryPath(enemyEntryPath);
-    enemy->SetLocation(Vector2{0, 0});
+    if (spawnCount % 2 == 0) {
+        enemy->SetEntryPath(enemyEntryPath);
+        enemy->SetLocation(Vector2{0, 20});
+        enemy->SetSpawnTime(GetTime() + (1 + (spawnCount++ * .2f)));
+    } else {
+        enemy->SetEntryPath(enemyEntryPath2);
+        enemy->SetLocation(Vector2{20, 0});
+        enemy->SetSpawnTime(GetTime() + (1 + ((spawnCount++ - 1) * .2f)));
+    }
+    enemy->SetPhysics(physics);
     enemyList.push_back(enemy);
     gridState.x += ENEMYSPACING;
     gridState.column += 1;
-    lastSpawnTime = GetTime();
+
+    fprintf(stderr, "\nspeed: %d", physics->GetSpeed());
+}
+
+void TestLevel::SetEnemy() {
+    std::shared_ptr<Logic::Physics> physics = std::make_shared<Logic::Physics>();
+    physics->SetSpeed(250);
+    physics->SetTurnSpeed(.2f);
+    AddEnemy(physics);
+
+    while (gridState.row < 3) {
+        AddEnemy(physics);
+        if (gridState.column > 8) {
+            gridState.column = 0;
+            gridState.row += 1;
+            gridState.y += ENEMYSPACING;
+            gridState.x = gridVector.x;
+        }
+    }
 }
