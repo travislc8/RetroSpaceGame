@@ -8,16 +8,20 @@ namespace Logic {
 class Path {
   private:
     std::vector<Vector2> points;
+    int pointIndex = 0;
+    void UpdateTargetIndex(Vector2, Vector2, float);
 
   public:
     Path();
     Path(std::vector<Vector2>);
-    Vector2 GetPoint(int);
-    int GetTargetPoint(Vector2, Vector2, int);
-    Vector2 GetDirection(Vector2, int);
+    Vector2 GetPoint();
+    void UpdatePoint(Vector2, Vector2, float);
+    Vector2 GetDirection(Vector2);
     void ShowPath();
-    Vector2 GetMoveLocation(Vector2, int&, int);
+    Vector2 GetMoveLocation(Vector2, int);
     void SetPath(std::vector<Vector2> points) { this->points = points; };
+    bool IsComplete();
+    void Reset();
 };
 
 } // namespace Logic

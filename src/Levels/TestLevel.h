@@ -29,8 +29,8 @@ class TestLevel {
     short gridDirection = 1;
     int spawnCount = 0;
 
-    std::shared_ptr<Logic::Path> enemyEntryPath = std::make_shared<Logic::Path>();
-    std::shared_ptr<Logic::Path> enemyEntryPath2 = std::make_shared<Logic::Path>();
+    Logic::Path enemyEntryPath;
+    Logic::Path enemyEntryPath2;
 
     void ShiftEnemy();
     void UpdateGridPosition();

@@ -13,6 +13,10 @@ class Scoreboard {
     Scoreboard(Vector2, float, float);
     void Draw();
     void Add(int);
+    void RemoveLife();
+    int GetLives();
+    void AddLife();
+    void SetLives(int);
 };
 
 #endif

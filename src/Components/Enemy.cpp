@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iomanip>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -29,12 +30,13 @@ Enemy::Enemy(Levels::LocationInGrid gridLocation, Vector2 offset) {
     this->gridLocation = gridLocation;
     LocateInGrid();
     hitbox = Rectangle{location.x, location.y, ENEMYWIDTH, ENEMYHEIGHT};
-    state = 3;
+    mode = Logic::Mode::NOTSPAWNED;
     direction = Vector2Normalize(Vector2{1, 1});
     moving = true;
     src = Rectangle{0, 0, (float)images[0].width, (float)images[0].height};
     dest = Rectangle{0, 0, (float)images[0].width, (float)images[0].height};
     origin = Vector2{(float)images[0].width / 2.0f, (float)images[0].height / 2.0f};
+    InitAttackPath();
 }
 
 Enemy::~Enemy() {
@@ -44,7 +46,7 @@ Enemy::~Enemy() {
 }
 
 void Enemy::Draw() {
-    if (state != 3) {
+    if (mode != Logic::NOTSPAWNED) {
 #if MODE == 1
         DrawRectangleRec(hitbox, RED);
 #endif
@@ -78,19 +80,24 @@ void Enemy::Draw() {
 void Enemy::SetLocation(Vector2 location) { MoveTo(location); }
 
 void Enemy::Update() {
-    // TODO change to an enum for switch
-    // 0 - entry path
-    // 1 - move with grid
-    // 2 - go to grid
-    // 3 - not spawned
-    if (state == 0) {
-        MoveState0();
-    } else if (state == 1) {
+    switch (mode) {
+    case Logic::Mode::ENTRY:
+        EntryMode();
+        break;
+    case Logic::Mode::INGRID:
         LocateInGrid();
-    } else if (state == 2) {
-        MoveState2();
-    } else if (state == 3) {
-        MoveState3();
+        break;
+    case Logic::Mode::RETURNTOGRID:
+        ReturnToGridMode();
+        break;
+    case Logic::Mode::NOTSPAWNED:
+        NotSpawnedMode();
+        break;
+    case Logic::Mode::ATTACK:
+        AttackMode();
+        break;
+    default:
+        break;
     }
 }
 
@@ -122,16 +129,18 @@ void Enemy::MoveTo(Vector2 vec) {
     hitbox.y = location.y;
 }
 
-void Enemy::MoveState0() {
-    if (pointIndex == -1) {
-        state = 2;
-        MoveState2();
+void Enemy::EntryMode() {
+    fprintf(stderr, "\n Entry");
+    entryPath.UpdatePoint(location, direction, physics->GetSpeed() * GetFrameTime());
+    if (entryPath.IsComplete()) {
+        mode = Logic::Mode::RETURNTOGRID;
+        ReturnToGridMode();
     } else {
-        fprintf(stderr, "\nlocation1: %f,%f", location.x, location.y);
-        fprintf(stderr, "\nspeed: %d", physics->GetSpeed());
-        direction = entryPath->GetDirection(location, pointIndex);
-        SetLocation(
-            entryPath->GetMoveLocation(location, pointIndex, physics->GetSpeed() * GetFrameTime()));
+        // fprintf(stderr, "\nlocation1: %f,%f", location.x, location.y);
+        // fprintf(stderr, "\nspeed: %d", physics->GetSpeed());
+        direction = entryPath.GetDirection(location);
+        SetLocation(entryPath.GetMoveLocation(location, physics->GetSpeed() * GetFrameTime()));
+
 #if MODE == 1
         entryPath->ShowPath();
         fprintf(stderr, "\nend direction: %f,%f", direction.x, direction.y);
@@ -140,36 +149,122 @@ void Enemy::MoveState0() {
     }
 }
 
-void Enemy::SetEntryPath(std::shared_ptr<Logic::Path> path) { entryPath = path; }
+void Enemy::SetEntryPath(Logic::Path path) { entryPath = path; }
 
-void Enemy::MoveState2() {
+void Enemy::ReturnToGridMode() {
+    float dir_angle = GetMoveAngleSmooth(GetGridLocationX(), GetGridLocationY());
+
+    float distance =
+        std::pow(location.y - GetGridLocationY(), 2) + std::pow(location.x - GetGridLocationX(), 2);
+    fprintf(stderr, "\nd to grid: %f", distance);
+
+    if (distance < std::pow(physics->GetSpeed() * 2 * GetFrameTime(), 2)) {
+        mode = Logic::Mode::INGRID;
+        LocateInGrid();
+    } else {
+        direction = Vector2Normalize(Vector2{std::cos(dir_angle), std::sin(dir_angle)});
+        fprintf(stderr, "direction: %f,%f", direction.x, direction.y);
+        MoveAmount(direction);
+    }
+}
+
+float Enemy::GetGridLocationX() { return gridLocation.x + offset.x; }
+float Enemy::GetGridLocationY() { return gridLocation.y + offset.y; }
+
+void Enemy::Spawn() { this->mode = Logic::Mode::ENTRY; };
+
+void Enemy::SetSpawnTime(float time) { this->spawnTime = time; };
+
+void Enemy::NotSpawnedMode() {
+    if (spawnTime < GetTime()) {
+        mode = Logic::Mode::ENTRY;
+        // mode = Logic::Mode::INGRID;
+        EntryMode();
+    }
+}
+
+Vector2 Enemy::GetCorner(int index) {
+    assert(index >= 0);
+    assert(index < 4);
+
+    switch (index) {
+    case 0:
+        return Vector2{hitbox.x, hitbox.y};
+        break;
+    case 1:
+        return Vector2{hitbox.x + ENEMYWIDTH, hitbox.y};
+        break;
+    case 2:
+        return Vector2{hitbox.x + ENEMYWIDTH, hitbox.y + ENEMYHEIGHT};
+        break;
+    case 3:
+        return Vector2{hitbox.x, hitbox.y + ENEMYHEIGHT};
+        break;
+    default:
+        return Vector2{0, 0};
+    }
+}
+
+void Enemy::InitAttackPath() {
+    std::vector<Vector2> vec;
+
+    vec.push_back(Vector2{200, 200});
+    vec.push_back(Vector2{500, 700});
+    vec.push_back(Vector2{300, 200});
+    attackPath.SetPath(vec);
+}
+
+void Enemy::AttackMode() {
+    // TODO
+    fprintf(stderr, "\nattacking - speed: %d", physics->GetSpeed());
+    attackPath.UpdatePoint(location, direction, physics->GetSpeed() * GetFrameTime());
+
+    if (attackPath.IsComplete()) {
+        fprintf(stderr, "\nend of attack");
+        mode = Logic::RETURNTOGRID;
+        ReturnToGridMode();
+    } else {
+        fprintf(stderr, "\ncontinue");
+        Vector2 point = attackPath.GetPoint();
+        float dir_angle = GetMoveAngleSmooth(point.x, point.y);
+        direction = Vector2Normalize(Vector2{std::cos(dir_angle), std::sin(dir_angle)});
+        fprintf(stderr, "\ndirection: %f,%f", direction.x, direction.y);
+        MoveAmount(direction);
+        fprintf(stderr, "\ntarget x: %f - y: %f", point.x, point.y);
+        fprintf(stderr, "\nend x: %f - y: %f", location.x, location.y);
+    }
+}
+
+void Enemy::MakeAttack() {
+    fprintf(stderr, "\nMake Attack");
+    mode = Logic::Mode::ATTACK;
+    attackPath.Reset();
+}
+
+float Enemy::GetMoveAngleSmooth(float x, float y) {
     float dir_angle = std::atan2(direction.y, direction.x);
-    fprintf(stderr, "\ndir_angleS %f", dir_angle);
-    float target_angel =
-        std::atan2(GetGridLocationY() - location.y, GetGridLocationX() - location.x);
+    // fprintf(stderr, "\ndir_angleS %f", dir_angle);
+    float target_angel = std::atan2(y - location.y, x - location.x);
 
     float dif_angle = target_angel - dir_angle;
-    fprintf(stderr, "\n\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
+    // fprintf(stderr, "\n\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
 
     Color color;
     if (dif_angle > 3.14159) {
         color = BLUE;
         // left
         dif_angle = -6.283 + dif_angle;
-        fprintf(stderr, "\nCheck1");
         assert(dif_angle <= 0);
         assert(dif_angle > -3.1415);
     } else if (dif_angle < -3.14159) {
         color = RED;
         // right
         dif_angle = 6.283 + dif_angle;
-        fprintf(stderr, "\nCheck2");
         assert(dif_angle >= 0);
         assert(dif_angle <= 3.1415);
     } else if (dif_angle < 0) {
         color = LIGHTGRAY;
         // left
-        fprintf(stderr, "\nCheck3");
         assert(dif_angle <= 0);
         assert(dif_angle > -3.1415);
     } else { // dif_angle > 0
@@ -177,7 +272,6 @@ void Enemy::MoveState2() {
         assert(dif_angle >= 0);
         assert(dif_angle < 3.1415);
         // right
-        fprintf(stderr, "\nCheck4");
     }
 
 #if MODE == 1
@@ -203,31 +297,5 @@ void Enemy::MoveState2() {
              location.y + std::sin(dir_angle) * 40, BLUE);
 
 #endif
-
-    float distance =
-        std::pow(location.y - GetGridLocationY(), 2) + std::pow(location.x - GetGridLocationX(), 2);
-    fprintf(stderr, "\nd to grid: %f", distance);
-
-    if (distance < std::pow(physics->GetSpeed() * 2 * GetFrameTime(), 2)) {
-        state = 1;
-        LocateInGrid();
-    } else {
-        direction = Vector2Normalize(Vector2{std::cos(dir_angle), std::sin(dir_angle)});
-        fprintf(stderr, "direction: %f,%f", direction.x, direction.y);
-        MoveAmount(direction);
-    }
-}
-
-float Enemy::GetGridLocationX() { return gridLocation.x + offset.x; }
-float Enemy::GetGridLocationY() { return gridLocation.y + offset.y; }
-
-void Enemy::Spawn() { this->state = 0; };
-
-void Enemy::SetSpawnTime(float time) { this->spawnTime = time; };
-
-void Enemy::MoveState3() {
-    if (spawnTime < GetTime()) {
-        state = 0;
-        MoveState0();
-    }
+    return dir_angle;
 }

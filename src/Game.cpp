@@ -5,6 +5,7 @@
 #include "Levels/TestLevel.h"
 #include "Scoreboard.h"
 #include "raylib.h"
+#include <cstdlib>
 #include <list>
 
 Game::Game() {
@@ -30,6 +31,7 @@ void Game::Update() {
     level->Update();
     CheckBullets();
     CheckBombs();
+    CheckCollisions();
 }
 
 void Game::Draw() {
@@ -42,7 +44,12 @@ void Game::Draw() {
 
 void Game::KeyInput() {
     if (IsKeyPressed(KEY_SPACE)) {
-        bullets.Add(plane->GetLocation());
+        if (scoreboard->GetLives() > 0)
+            bullets.Add(plane->GetLocation());
+    }
+    if (IsKeyPressed(KEY_R)) {
+        if (scoreboard->GetLives() > 0)
+            plane->Reset();
     }
 
     if (IsKeyDown(KEY_RIGHT)) {
@@ -67,3 +74,35 @@ void Game::CheckBullets() {
 };
 
 void Game::CheckBombs() {}
+
+void Game::CheckCollisions() {
+    std::list<Components::Enemy*> enemyList = level->GetEnemyList();
+    bool collision;
+    if (!plane->ShouldDestroy()) {
+        for (auto enemy : enemyList) {
+            collision = false;
+            if (CheckCollisionPointTriangle(enemy->GetCorner(0), plane->GetPoint(0),
+                                            plane->GetPoint(1), plane->GetPoint(2))) {
+                collision = true;
+            } else if (CheckCollisionPointTriangle(enemy->GetCorner(1), plane->GetPoint(0),
+                                                   plane->GetPoint(1), plane->GetPoint(2))) {
+                collision = true;
+            } else if (CheckCollisionPointTriangle(enemy->GetCorner(2), plane->GetPoint(0),
+                                                   plane->GetPoint(1), plane->GetPoint(2))) {
+                collision = true;
+            } else if (CheckCollisionPointTriangle(enemy->GetCorner(3), plane->GetPoint(0),
+                                                   plane->GetPoint(1), plane->GetPoint(2))) {
+                collision = true;
+            }
+
+            if (collision) {
+                scoreboard->RemoveLife();
+                enemy->SetDestroy();
+                plane->SetDestroy();
+                if (scoreboard->GetLives() < 0) {
+                    exit(4);
+                }
+            }
+        }
+    }
+}

@@ -23,6 +23,7 @@ class Game {
     void KeyInput();
     void CheckBullets();
     void CheckBombs();
+    void CheckCollisions();
 
   public:
     Game();

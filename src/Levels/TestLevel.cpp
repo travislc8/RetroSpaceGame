@@ -40,6 +40,11 @@ void TestLevel::Draw() {
 }
 
 void TestLevel::Update() {
+    // TODO temp
+    if (IsKeyPressed(KEY_T)) {
+        enemyList.front()->MakeAttack();
+    }
+
     if ((GetTime() - lastShiftTime) > .5f) {
         lastShiftTime = GetTime();
         UpdateGridPosition();
@@ -87,15 +92,15 @@ void TestLevel::SetEnemyEntryPath() {
     std::vector<Vector2> vec;
     vec.push_back(Vector2{100, 100});
     vec.push_back(Vector2{400, 400});
-    vec.push_back(Vector2{401, 540});
-    enemyEntryPath->SetPath(vec);
+    vec.push_back(Vector2{401, 640});
+    enemyEntryPath.SetPath(vec);
 
     std::vector<Vector2> vec2;
     vec2.push_back(Vector2{130, 70});
     vec2.push_back(Vector2{430, 370});
-    vec2.push_back(Vector2{431, 500});
+    vec2.push_back(Vector2{431, 600});
 
-    enemyEntryPath2->SetPath(vec2);
+    enemyEntryPath2.SetPath(vec2);
 }
 
 void TestLevel::AddEnemy(std::shared_ptr<Logic::Physics> physics) {
@@ -116,7 +121,7 @@ void TestLevel::AddEnemy(std::shared_ptr<Logic::Physics> physics) {
     gridState.x += ENEMYSPACING;
     gridState.column += 1;
 
-    fprintf(stderr, "\nspeed: %d", physics->GetSpeed());
+    // fprintf(stderr, "\nspeed: %d", physics->GetSpeed());
 }
 
 void TestLevel::SetEnemy() {

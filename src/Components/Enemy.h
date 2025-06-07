@@ -2,6 +2,7 @@
 #define _ENEMY_H_
 
 #include "../Levels/LevelUtils.h"
+#include "../Logic/Mode.h"
 #include "../Logic/Path.h"
 #include "../Logic/Physics.h"
 #include "raylib.h"
@@ -24,28 +25,30 @@ class Enemy {
     Vector2 direction;
     bool destroy = false;
     bool moving = false;
-    int state;
-    int nextTarget = 0;
+    Logic::Mode mode;
     Levels::LocationInGrid gridLocation;
     Vector2 offset;
-    std::shared_ptr<Logic::Path> entryPath;
-    int pointIndex = 0;
+    Logic::Path entryPath;
     float spawnTime;
     float imageTime;
     int imageIndex = 0;
     Rectangle src;
     Rectangle dest;
     Vector2 origin;
+    Logic::Path attackPath;
 
     float GetGridLocationX();
     float GetGridLocationY();
     void LocateInGrid();
 
-    void MoveState0();
-    void MoveState2();
-    void MoveState3();
+    void EntryMode();
+    void ReturnToGridMode();
+    void NotSpawnedMode();
+    void AttackMode();
     void MoveAmount(Vector2);
     void MoveTo(Vector2);
+    void InitAttackPath();
+    float GetMoveAngleSmooth(float, float);
 
   public:
     Rectangle hitbox;
@@ -61,10 +64,12 @@ class Enemy {
     void SetMoving(bool moving) { this->moving = moving; };
     void Update();
     void SetGridLocation(Vector2);
-    void SetEntryPath(std::shared_ptr<Logic::Path>);
+    void SetEntryPath(Logic::Path);
     void SetPhysics(std::shared_ptr<Logic::Physics> physics) { this->physics = physics; };
     void Spawn();
     void SetSpawnTime(float time);
+    Vector2 GetCorner(int);
+    void MakeAttack();
 };
 } // namespace Components
 

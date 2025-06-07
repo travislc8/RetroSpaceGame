@@ -28,3 +28,8 @@ void Scoreboard::Draw() {
 }
 
 void Scoreboard::Add(int value) { score += value; }
+
+void Scoreboard::RemoveLife() { lives -= 1; }
+int Scoreboard::GetLives() { return lives; }
+void Scoreboard::AddLife() { lives += 1; }
+void Scoreboard::SetLives(int lives) { this->lives = lives; }
