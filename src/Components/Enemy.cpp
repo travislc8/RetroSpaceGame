@@ -30,7 +30,7 @@ Enemy::Enemy(Levels::LocationInGrid gridLocation, Vector2 offset) {
     this->gridLocation = gridLocation;
     LocateInGrid();
     hitbox = Rectangle{location.x, location.y, ENEMYWIDTH, ENEMYHEIGHT};
-    mode = Logic::Mode::NOTSPAWNED;
+    mode = Logic::EnemyMode::NOTSPAWNED;
     direction = Vector2Normalize(Vector2{1, 1});
     moving = true;
     src = Rectangle{0, 0, (float)images[0].width, (float)images[0].height};
@@ -81,19 +81,19 @@ void Enemy::SetLocation(Vector2 location) { MoveTo(location); }
 
 void Enemy::Update() {
     switch (mode) {
-    case Logic::Mode::ENTRY:
+    case Logic::EnemyMode::ENTRY:
         EntryMode();
         break;
-    case Logic::Mode::INGRID:
+    case Logic::EnemyMode::INGRID:
         LocateInGrid();
         break;
-    case Logic::Mode::RETURNTOGRID:
+    case Logic::EnemyMode::RETURNTOGRID:
         ReturnToGridMode();
         break;
-    case Logic::Mode::NOTSPAWNED:
+    case Logic::EnemyMode::NOTSPAWNED:
         NotSpawnedMode();
         break;
-    case Logic::Mode::ATTACK:
+    case Logic::EnemyMode::ATTACK:
         AttackMode();
         break;
     default:
@@ -113,6 +113,7 @@ void Enemy::LocateInGrid() {
     hitbox.y = location.y;
 
     direction = Vector2{0, -1};
+    moving = false;
 }
 
 void Enemy::MoveAmount(Vector2 vec) {
@@ -133,7 +134,7 @@ void Enemy::EntryMode() {
     fprintf(stderr, "\n Entry");
     entryPath.UpdatePoint(location, direction, physics->GetSpeed() * GetFrameTime());
     if (entryPath.IsComplete()) {
-        mode = Logic::Mode::RETURNTOGRID;
+        mode = Logic::EnemyMode::RETURNTOGRID;
         ReturnToGridMode();
     } else {
         // fprintf(stderr, "\nlocation1: %f,%f", location.x, location.y);
@@ -159,7 +160,7 @@ void Enemy::ReturnToGridMode() {
     fprintf(stderr, "\nd to grid: %f", distance);
 
     if (distance < std::pow(physics->GetSpeed() * 2 * GetFrameTime(), 2)) {
-        mode = Logic::Mode::INGRID;
+        mode = Logic::EnemyMode::INGRID;
         LocateInGrid();
     } else {
         direction = Vector2Normalize(Vector2{std::cos(dir_angle), std::sin(dir_angle)});
@@ -171,13 +172,13 @@ void Enemy::ReturnToGridMode() {
 float Enemy::GetGridLocationX() { return gridLocation.x + offset.x; }
 float Enemy::GetGridLocationY() { return gridLocation.y + offset.y; }
 
-void Enemy::Spawn() { this->mode = Logic::Mode::ENTRY; };
+void Enemy::Spawn() { this->mode = Logic::EnemyMode::ENTRY; };
 
 void Enemy::SetSpawnTime(float time) { this->spawnTime = time; };
 
 void Enemy::NotSpawnedMode() {
     if (spawnTime < GetTime()) {
-        mode = Logic::Mode::ENTRY;
+        mode = Logic::EnemyMode::ENTRY;
         // mode = Logic::Mode::INGRID;
         EntryMode();
     }
@@ -237,8 +238,9 @@ void Enemy::AttackMode() {
 
 void Enemy::MakeAttack() {
     fprintf(stderr, "\nMake Attack");
-    mode = Logic::Mode::ATTACK;
+    mode = Logic::EnemyMode::ATTACK;
     attackPath.Reset();
+    moving = true;
 }
 
 float Enemy::GetMoveAngleSmooth(float x, float y) {
@@ -298,4 +300,9 @@ float Enemy::GetMoveAngleSmooth(float x, float y) {
 
 #endif
     return dir_angle;
+}
+
+void Enemy::SetInGrid() {
+    mode = Logic::EnemyMode::INGRID;
+    LocateInGrid();
 }

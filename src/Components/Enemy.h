@@ -25,7 +25,7 @@ class Enemy {
     Vector2 direction;
     bool destroy = false;
     bool moving = false;
-    Logic::Mode mode;
+    Logic::EnemyMode mode;
     Levels::LocationInGrid gridLocation;
     Vector2 offset;
     Logic::Path entryPath;
@@ -70,6 +70,7 @@ class Enemy {
     void SetSpawnTime(float time);
     Vector2 GetCorner(int);
     void MakeAttack();
+    void SetInGrid();
 };
 } // namespace Components
 

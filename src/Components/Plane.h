@@ -24,6 +24,7 @@ class Plane {
     void SetDestroy();
     bool ShouldDestroy() { return destroy; };
     void Reset();
+    bool IsAlive() { return !destroy; }
 };
 } // namespace Components
 

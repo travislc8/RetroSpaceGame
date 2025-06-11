@@ -11,6 +11,8 @@ TestLevel::TestLevel(float width, float height) {
 #if MODE == 1
     fprintf(stderr, "\nTestLevelStart");
 #endif
+    levelWidth = width;
+    levelHeight = height;
     maxGridX = width - 50 - (rowCount * ENEMYSPACING);
     minGridX = 0 + 50.0f;
     gridState = LocationInGrid{0, 0, minGridX, 50.0f};
@@ -24,6 +26,8 @@ TestLevel::TestLevel(float width, float height) {
 #if MODE == 1
     fprintf(stderr, "\nTestLevel End");
 #endif
+
+    state = LevelState::ENEMYENTRY;
 }
 
 TestLevel::~TestLevel() {
@@ -36,28 +40,6 @@ TestLevel::~TestLevel() {
 void TestLevel::Draw() {
     for (auto enemy : enemyList) {
         enemy->Draw();
-    }
-}
-
-void TestLevel::Update() {
-    // TODO temp
-    if (IsKeyPressed(KEY_T)) {
-        enemyList.front()->MakeAttack();
-    }
-
-    if ((GetTime() - lastShiftTime) > .5f) {
-        lastShiftTime = GetTime();
-        UpdateGridPosition();
-        ShiftEnemy();
-    }
-    for (auto it = enemyList.begin(); it != enemyList.end();) {
-        if ((*it)->ShouldDestroy()) {
-            delete *it;
-            it = enemyList.erase(it);
-        } else {
-            (*it)->Update();
-            it++;
-        }
     }
 }
 
@@ -137,6 +119,109 @@ void TestLevel::SetEnemy() {
             gridState.row += 1;
             gridState.y += ENEMYSPACING;
             gridState.x = gridVector.x;
+        }
+    }
+}
+
+void TestLevel::Update() {
+#if MODE == 2 || MODE == 1
+    if (IsKeyPressed(KEY_K)) {
+        enemyList.front()->SetDestroy();
+    }
+    if (IsKeyPressed(KEY_G)) {
+        timeInEnemyInGrid = GetTime();
+        state = LevelState::ENEMYINGRID;
+        for (auto it : enemyList) {
+            (*it).SetInGrid();
+        }
+    }
+#endif
+    if (enemyList.size() == 0) {
+        state = LevelState::COMPLETE;
+    }
+    if ((GetTime() - lastShiftTime) > .5f) {
+        lastShiftTime = GetTime();
+        UpdateGridPosition();
+        ShiftEnemy();
+    }
+
+    movingEnemyCount = 0;
+
+    for (auto it = enemyList.begin(); it != enemyList.end();) {
+        if ((*it)->ShouldDestroy()) {
+            delete *it;
+            it = enemyList.erase(it);
+        } else {
+            (*it)->Update();
+            if ((*it)->IsMoving()) {
+                movingEnemyCount++;
+            }
+            it++;
+        }
+    }
+
+    switch (state) {
+    case LOADING:
+        break;
+    case ENEMYENTRY:
+        EnemyEntryState();
+        break;
+    case ENEMYATTACKING:
+        EnemyAttackingState();
+        break;
+    case ENEMYINGRID:
+        EnemyInGridState();
+        break;
+    case COMPLETE:
+        LevelCompleteState();
+        break;
+    }
+}
+
+void TestLevel::EnemyEntryState() {
+    if (movingEnemyCount == 0) {
+        state = LevelState::ENEMYINGRID;
+        timeInEnemyInGrid = GetTime();
+    }
+}
+void TestLevel::LevelCompleteState() {
+    DrawText("Level Complete", levelWidth / 2 - 100, levelHeight / 2 - 20, 20, WHITE);
+}
+
+void TestLevel::EnemyInGridState() {
+    fprintf(stderr, "\nTime: %f", GetTime() - timeInEnemyInGrid);
+    if (GetTime() - timeInEnemyInGrid > 1.5f) {
+        CreateAttack();
+        timeInEnemyInGrid = GetTime();
+    }
+}
+void TestLevel::EnemyAttackingState() {
+    if (movingEnemyCount == 0) {
+        state = LevelState::ENEMYINGRID;
+        timeInEnemyInGrid = GetTime();
+    }
+}
+
+void TestLevel::CreateAttack() {
+    state = LevelState::ENEMYATTACKING;
+    SetRandomSeed(GetTime());
+    if (enemyList.size() > 1) {
+        float rand1 = GetRandomValue(0, enemyList.size());
+        float rand2 = GetRandomValue(0, enemyList.size());
+        while (rand1 == rand2) {
+            rand2 = GetRandomValue(0, enemyList.size());
+        }
+
+        int index = 0;
+        for (auto it : enemyList) {
+            if (index == rand1 || index == rand2) {
+                (*it).MakeAttack();
+            }
+            index++;
+        }
+    } else {
+        for (auto it : enemyList) {
+            (*it).MakeAttack();
         }
     }
 }

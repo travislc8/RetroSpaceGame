@@ -78,5 +78,5 @@ target_link_libraries(main PRIVATE OpenGL::GL)
 
 #-lopengl32 -lgdi32 -lwinmm
 
-# Define a macro globally
-add_compile_definitions(MODE=0)
+# debug level
+add_compile_definitions(MODE=2)

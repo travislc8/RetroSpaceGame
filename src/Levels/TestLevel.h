@@ -14,20 +14,31 @@
 
 namespace Levels {
 
+enum LevelState {
+    LOADING,
+    ENEMYENTRY,
+    ENEMYATTACKING,
+    COMPLETE,
+    ENEMYINGRID,
+};
+
 class TestLevel {
   private:
     float minGridX, maxGridX;
+    float levelHeight, levelWidth;
     LocationInGrid gridState;
     Vector2 gridVector;
     double startTime;
     double lastShiftTime;
     double lastSpawnTime;
-    short state = 1;
     int rowCount = 8;
     int columnCount = 2;
     std::list<Components::Enemy*> enemyList;
     short gridDirection = 1;
     int spawnCount = 0;
+    int movingEnemyCount = 0;
+    LevelState state = LOADING;
+    float timeInEnemyInGrid;
 
     Logic::Path enemyEntryPath;
     Logic::Path enemyEntryPath2;
@@ -38,6 +49,12 @@ class TestLevel {
     void AddEnemy(std::shared_ptr<Logic::Physics>);
     void SetEnemy();
     void SpawnEnemy();
+    void EnemyEntryState();
+    void LevelCompleteState();
+    void EnemyInGridState();
+    void EnemyAttackingState();
+
+    void CreateAttack();
 
   public:
     TestLevel(float, float);

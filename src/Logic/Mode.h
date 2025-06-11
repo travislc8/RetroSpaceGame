@@ -1,5 +1,5 @@
 namespace Logic {
-enum Mode {
+enum EnemyMode {
     ENTRY,
     RETURNTOGRID,
     ATTACK,
@@ -9,4 +9,5 @@ enum Mode {
     DYING,
 
 };
-}
+
+} // namespace Logic

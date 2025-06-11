@@ -44,7 +44,7 @@ void Game::Draw() {
 
 void Game::KeyInput() {
     if (IsKeyPressed(KEY_SPACE)) {
-        if (scoreboard->GetLives() > 0)
+        if (plane->IsAlive())
             bullets.Add(plane->GetLocation());
     }
     if (IsKeyPressed(KEY_R)) {
