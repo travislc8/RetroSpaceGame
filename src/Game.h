@@ -18,12 +18,14 @@ class Game {
     Components::Background* background;
     float gameWidth, gameHeight;
     Scoreboard* scoreboard;
+    bool gameOver = false;
 
     void DrawPlane();
     void KeyInput();
     void CheckBullets();
     void CheckBombs();
     void CheckCollisions();
+    void EndGame();
 
   public:
     Game();

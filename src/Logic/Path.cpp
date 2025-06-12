@@ -1,4 +1,5 @@
 #include "Path.h"
+#include "../Debug.h"
 #include "raylib.h"
 #include "raymath.h"
 #include <cassert>
@@ -13,7 +14,8 @@ Path::Path(std::vector<Vector2> points) {
     for (auto point : points) {
         this->points.push_back(Vector2{point.x, point.y});
     }
-    // fprintf(stderr, "\nPath init vector size: %d, [0].x = %f", (int)points.size(), points[0].x);
+    PRINT(2, fprintf(stderr, "\nPath init vector size: %d, [0].x = %f", (int)points.size(),
+                     points[0].x));
     assert(points.size() > 0);
 }
 
@@ -31,47 +33,23 @@ Vector2 Path::GetPoint() {
 }
 
 void Path::UpdateTargetIndex(Vector2 loc, Vector2 direction, float speed) {
-    // fprintf(stderr, "\ndirection.x: %f, direction.y: %f", direction.x, direction.y);
-    // fprintf(stderr, "\npoints count %d", (int)points.size());
     bool change = false;
 
     float distance =
         std::pow(loc.y - points[pointIndex].y, 2) + std::pow(loc.x - points[pointIndex].x, 2);
-    fprintf(stderr, "\nGetting Target - distance: %f, speed %f", distance, speed);
+    PRINT(2, fprintf(stderr, "\nGetting Target - distance: %f, speed %f", distance, speed));
     if (distance < speed * 2) {
-        fprintf(stderr, "\nnext");
+        PRINT(2, fprintf(stderr, "\nnext"));
         change = true;
         pointIndex++;
     }
-    /*
-    if (!change) {
-        if (direction.y < 0.0f) {
-            if (loc.y <= points[current].y) {
-                next++;
-                change = true;
-            } else {
-                fprintf(stderr, "\nno change");
-                fprintf(stderr, "\nloc.y: %f points[].y: %f", loc.y, points[current].y);
-            }
 
-        } else {
-            if (loc.y >= points[current].y) {
-                next++;
-                change = true;
-            } else {
-                fprintf(stderr, "\nno change");
-                fprintf(stderr, "\nloc.y: %f points[].y: %f", loc.y, points[current].y);
-            }
-        }
-    }
-    */
-
-    fprintf(stderr, "\nPre point index: %d ", pointIndex);
+    PRINT(2, fprintf(stderr, "\nPre point index: %d ", pointIndex));
     if (pointIndex >= points.size()) {
-        fprintf(stderr, "\nCompleted\n\n");
+        PRINT(2, fprintf(stderr, "\nCompleted\n\n"));
         pointIndex = -1;
     }
-    fprintf(stderr, "\nPost point index: %d ", pointIndex);
+    PRINT(2, fprintf(stderr, "\nPost point index: %d ", pointIndex));
     assert(pointIndex < (int)points.size());
 }
 
@@ -87,10 +65,7 @@ void Path::ShowPath() {
 
 Vector2 Path::GetMoveLocation(Vector2 currentLoc, int distance) {
     Vector2 result = currentLoc;
-    // fprintf(stderr, "\nstart distance: %d", distance);
     while (distance > 0) {
-        // fprintf(stderr, "\npoint %d - %f,%f", pointIndex, points[pointIndex].x,
-        // points[pointIndex].y);
         float distance_squared = std::pow((points[pointIndex].x - currentLoc.x), 2) +
                                  std::pow((points[pointIndex].y - currentLoc.y), 2);
         float distance_to_point = std::sqrt(distance_squared);
@@ -98,19 +73,15 @@ Vector2 Path::GetMoveLocation(Vector2 currentLoc, int distance) {
             distance -= distance_to_point;
             currentLoc = points[pointIndex];
             pointIndex++;
-            // fprintf(stderr, "\noverlap - distance: %d", distance);
 
         } else {
             if (pointIndex == points.size()) {
                 pointIndex = -1;
             } else {
-                // fprintf(stderr, "\nGetting Point");
                 Vector2 direction = Vector2Normalize(Vector2{points[pointIndex].x - currentLoc.x,
                                                              points[pointIndex].y - currentLoc.y});
-                // fprintf(stderr, "\ndirection2: %f,%f", direction.x, direction.y);
                 result.x = currentLoc.x + (direction.x * distance);
                 result.y = currentLoc.y + (direction.y * distance);
-                // fprintf(stderr, "\nresult: %f,%f", result.x, result.y);
                 distance = 0;
                 // pointIndex = GetTargetPoint(result, direction, pointIndex, distance);
             }

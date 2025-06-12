@@ -1,5 +1,8 @@
 #include "TestLevel.h"
+#include "../Components/Butterfly.h"
 #include "../Components/Enemy.h"
+#include "../Components/Fly.h"
+#include "../Debug.h"
 #include "LevelUtils.h"
 #include "raylib.h"
 #include <iterator>
@@ -8,9 +11,7 @@
 
 using namespace Levels;
 TestLevel::TestLevel(float width, float height) {
-#if MODE == 1
-    fprintf(stderr, "\nTestLevelStart");
-#endif
+    PRINT(0, fprintf(stderr, "\nTestLevelStart"));
     levelWidth = width;
     levelHeight = height;
     maxGridX = width - 50 - (rowCount * ENEMYSPACING);
@@ -22,10 +23,9 @@ TestLevel::TestLevel(float width, float height) {
     SetEnemyEntryPath();
     SetEnemy();
     lastSpawnTime = GetTime();
+    bombs.SetGround(height);
 
-#if MODE == 1
-    fprintf(stderr, "\nTestLevel End");
-#endif
+    PRINT(2, fprintf(stderr, "\nTestLevel End"));
 
     state = LevelState::ENEMYENTRY;
 }
@@ -41,6 +41,7 @@ void TestLevel::Draw() {
     for (auto enemy : enemyList) {
         enemy->Draw();
     }
+    bombs.Draw();
 }
 
 void TestLevel::Remove(Components::Enemy* renemy) {
@@ -85,10 +86,21 @@ void TestLevel::SetEnemyEntryPath() {
     enemyEntryPath2.SetPath(vec2);
 }
 
-void TestLevel::AddEnemy(std::shared_ptr<Logic::Physics> physics) {
-    Components::Enemy* enemy =
-        new Components::Enemy(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
-                                                 (float)(ENEMYSPACING * gridState.row)});
+void TestLevel::AddEnemy(std::shared_ptr<Logic::Physics> physics, Logic::EnemyType type) {
+    Components::Enemy* enemy;
+    switch (type) {
+    case Logic::BUTTERFLY:
+        enemy =
+            new Components::Butterfly(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
+                                                         (float)(ENEMYSPACING * gridState.row)});
+        break;
+    case Logic::FLY:
+        enemy = new Components::Fly(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
+                                                       (float)(ENEMYSPACING * gridState.row)});
+        break;
+    }
+    enemy->LoadTexture();
+    enemy->SetGameSize(levelWidth, levelHeight);
     if (spawnCount % 2 == 0) {
         enemy->SetEntryPath(enemyEntryPath);
         enemy->SetLocation(Vector2{0, 20});
@@ -103,17 +115,21 @@ void TestLevel::AddEnemy(std::shared_ptr<Logic::Physics> physics) {
     gridState.x += ENEMYSPACING;
     gridState.column += 1;
 
-    // fprintf(stderr, "\nspeed: %d", physics->GetSpeed());
+    PRINT(2, fprintf(stderr, "\nspeed: %d", physics->GetSpeed()));
 }
 
 void TestLevel::SetEnemy() {
     std::shared_ptr<Logic::Physics> physics = std::make_shared<Logic::Physics>();
-    physics->SetSpeed(250);
+    physics->SetSpeed(350);
     physics->SetTurnSpeed(.2f);
-    AddEnemy(physics);
+    AddEnemy(physics, Logic::BUTTERFLY);
 
-    while (gridState.row < 3) {
-        AddEnemy(physics);
+    while (gridState.row < 5) {
+        if (gridState.row % 2 == 0) {
+            AddEnemy(physics, Logic::BUTTERFLY);
+        } else if (gridState.row % 2 == 1) {
+            AddEnemy(physics, Logic::FLY);
+        }
         if (gridState.column > 8) {
             gridState.column = 0;
             gridState.row += 1;
@@ -124,17 +140,21 @@ void TestLevel::SetEnemy() {
 }
 
 void TestLevel::Update() {
-#if MODE == 2 || MODE == 1
+    bombs.Update();
+#if MODE > 0
     if (IsKeyPressed(KEY_K)) {
         enemyList.front()->SetDestroy();
     }
     if (IsKeyPressed(KEY_G)) {
-        timeInEnemyInGrid = GetTime();
         state = LevelState::ENEMYINGRID;
         for (auto it : enemyList) {
             (*it).SetInGrid();
         }
     }
+    if (IsKeyPressed(KEY_F)) {
+        CreateAttack();
+    }
+
 #endif
     if (enemyList.size() == 0) {
         state = LevelState::COMPLETE;
@@ -145,7 +165,7 @@ void TestLevel::Update() {
         ShiftEnemy();
     }
 
-    movingEnemyCount = 0;
+    movingEnemy.clear();
 
     for (auto it = enemyList.begin(); it != enemyList.end();) {
         if ((*it)->ShouldDestroy()) {
@@ -154,7 +174,7 @@ void TestLevel::Update() {
         } else {
             (*it)->Update();
             if ((*it)->IsMoving()) {
-                movingEnemyCount++;
+                movingEnemy.push_back((*it));
             }
             it++;
         }
@@ -179,9 +199,8 @@ void TestLevel::Update() {
 }
 
 void TestLevel::EnemyEntryState() {
-    if (movingEnemyCount == 0) {
+    if (movingEnemy.size() == 0) {
         state = LevelState::ENEMYINGRID;
-        timeInEnemyInGrid = GetTime();
     }
 }
 void TestLevel::LevelCompleteState() {
@@ -189,32 +208,42 @@ void TestLevel::LevelCompleteState() {
 }
 
 void TestLevel::EnemyInGridState() {
-    fprintf(stderr, "\nTime: %f", GetTime() - timeInEnemyInGrid);
-    if (GetTime() - timeInEnemyInGrid > 1.5f) {
+    if (GetRandomValue(0, attackChance) == 0 && movingEnemy.size() < maxEnemyAttacking) {
         CreateAttack();
-        timeInEnemyInGrid = GetTime();
     }
 }
+
 void TestLevel::EnemyAttackingState() {
-    if (movingEnemyCount == 0) {
+    if (GetRandomValue(0, attackChance) == 0 && movingEnemy.size() < maxEnemyAttacking) {
+        CreateAttack();
+    }
+
+    if (movingEnemy.size() == 0) {
         state = LevelState::ENEMYINGRID;
-        timeInEnemyInGrid = GetTime();
+    }
+
+    if (bombs.Size() < maxBombs) {
+        for (auto enemy : movingEnemy) {
+            if ((*enemy).GetLocation().y > 300 && (*enemy).GetLocation().y < 350) {
+                int rand = GetRandomValue(0, bombChance);
+                if (rand == 0 && !(*enemy).HasDropedBomb()) {
+                    bombs.Add((*enemy).GetLocation());
+                    (*enemy).SetHasDropedBomb(true);
+                }
+                break;
+            }
+        }
     }
 }
 
 void TestLevel::CreateAttack() {
     state = LevelState::ENEMYATTACKING;
-    SetRandomSeed(GetTime());
     if (enemyList.size() > 1) {
         float rand1 = GetRandomValue(0, enemyList.size());
-        float rand2 = GetRandomValue(0, enemyList.size());
-        while (rand1 == rand2) {
-            rand2 = GetRandomValue(0, enemyList.size());
-        }
 
         int index = 0;
         for (auto it : enemyList) {
-            if (index == rand1 || index == rand2) {
+            if (index == rand1) {
                 (*it).MakeAttack();
             }
             index++;
@@ -225,3 +254,5 @@ void TestLevel::CreateAttack() {
         }
     }
 }
+
+void TestLevel::EndGame() { gameOver = true; }

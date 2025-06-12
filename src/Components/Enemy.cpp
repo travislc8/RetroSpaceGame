@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include "../Debug.h"
 #include "../Logic/Path.h"
 #include "raylib.h"
 #include "raymath.h"
@@ -14,18 +15,6 @@
 using namespace Components;
 
 Enemy::Enemy(Levels::LocationInGrid gridLocation, Vector2 offset) {
-    Image img = LoadImage("../src/assets/butterfly.png");
-    ImageResize(&img, ENEMYWIDTH, ENEMYHEIGHT);
-    images[0] = LoadTextureFromImage(img);
-    UnloadImage(img);
-
-    Image img2 = LoadImage("../src/assets/butterfly2.png");
-    ImageResize(&img2, ENEMYWIDTH, ENEMYHEIGHT);
-    images[1] = LoadTextureFromImage(img2);
-    UnloadImage(img2);
-    assert(images[0].id != 0);
-    assert(images[1].id != 0);
-
     this->offset = offset;
     this->gridLocation = gridLocation;
     LocateInGrid();
@@ -33,9 +22,6 @@ Enemy::Enemy(Levels::LocationInGrid gridLocation, Vector2 offset) {
     mode = Logic::EnemyMode::NOTSPAWNED;
     direction = Vector2Normalize(Vector2{1, 1});
     moving = true;
-    src = Rectangle{0, 0, (float)images[0].width, (float)images[0].height};
-    dest = Rectangle{0, 0, (float)images[0].width, (float)images[0].height};
-    origin = Vector2{(float)images[0].width / 2.0f, (float)images[0].height / 2.0f};
     InitAttackPath();
 }
 
@@ -43,38 +29,6 @@ Enemy::~Enemy() {
     for (auto texture : images) {
         UnloadTexture(texture);
     };
-}
-
-void Enemy::Draw() {
-    if (mode != Logic::NOTSPAWNED) {
-#if MODE == 1
-        DrawRectangleRec(hitbox, RED);
-#endif
-        if (GetTime() - imageTime > .5f) {
-            if (imageIndex == 1) {
-                imageIndex = 0;
-            } else {
-                imageIndex = 1;
-            }
-            imageTime = GetTime();
-        }
-
-        dest.x = location.x;
-        dest.y = location.y;
-        dest.x += (float)images[0].width / 2.0f;
-        dest.y += (float)images[0].height / 2.0f;
-        float rotation = std::atan2(direction.y, direction.x);
-        rotation = rotation * (180 / 3.14159) + 90;
-        if (rotation < 0) {
-            rotation = 360 + rotation;
-        }
-        if (images[imageIndex].id == 0) {
-            DrawRectangleRec(hitbox, ORANGE);
-        } else {
-            DrawTexturePro(images[imageIndex], src, dest, origin, rotation, WHITE);
-        }
-        // DrawTexture(images[imageIndex], location.x, location.y, WHITE);
-    }
 }
 
 void Enemy::SetLocation(Vector2 location) { MoveTo(location); }
@@ -131,19 +85,19 @@ void Enemy::MoveTo(Vector2 vec) {
 }
 
 void Enemy::EntryMode() {
-    fprintf(stderr, "\n Entry");
+    PRINT(2, fprintf(stderr, "\n Entry"));
     entryPath.UpdatePoint(location, direction, physics->GetSpeed() * GetFrameTime());
     if (entryPath.IsComplete()) {
         mode = Logic::EnemyMode::RETURNTOGRID;
         ReturnToGridMode();
     } else {
-        // fprintf(stderr, "\nlocation1: %f,%f", location.x, location.y);
-        // fprintf(stderr, "\nspeed: %d", physics->GetSpeed());
+        PRINT(2, fprintf(stderr, "\nlocation1: %f,%f", location.x, location.y));
+        PRINT(2, fprintf(stderr, "\nspeed: %d", physics->GetSpeed()));
         direction = entryPath.GetDirection(location);
         SetLocation(entryPath.GetMoveLocation(location, physics->GetSpeed() * GetFrameTime()));
 
-#if MODE == 1
-        entryPath->ShowPath();
+#if MODE > 1
+        entryPath.ShowPath();
         fprintf(stderr, "\nend direction: %f,%f", direction.x, direction.y);
         fprintf(stderr, "\nlocation2: %f,%f", location.x, location.y);
 #endif
@@ -157,14 +111,14 @@ void Enemy::ReturnToGridMode() {
 
     float distance =
         std::pow(location.y - GetGridLocationY(), 2) + std::pow(location.x - GetGridLocationX(), 2);
-    fprintf(stderr, "\nd to grid: %f", distance);
+    PRINT(2, fprintf(stderr, "\nd to grid: %f", distance));
 
     if (distance < std::pow(physics->GetSpeed() * 2 * GetFrameTime(), 2)) {
         mode = Logic::EnemyMode::INGRID;
         LocateInGrid();
     } else {
         direction = Vector2Normalize(Vector2{std::cos(dir_angle), std::sin(dir_angle)});
-        fprintf(stderr, "direction: %f,%f", direction.x, direction.y);
+        PRINT(2, fprintf(stderr, "direction: %f,%f", direction.x, direction.y));
         MoveAmount(direction);
     }
 }
@@ -210,46 +164,52 @@ void Enemy::InitAttackPath() {
     std::vector<Vector2> vec;
 
     vec.push_back(Vector2{200, 200});
-    vec.push_back(Vector2{500, 700});
-    vec.push_back(Vector2{300, 200});
     attackPath.SetPath(vec);
 }
 
 void Enemy::AttackMode() {
     // TODO
-    fprintf(stderr, "\nattacking - speed: %d", physics->GetSpeed());
+    PRINT(2, fprintf(stderr, "\nattacking - speed: %d", physics->GetSpeed()));
     attackPath.UpdatePoint(location, direction, physics->GetSpeed() * GetFrameTime());
 
     if (attackPath.IsComplete()) {
-        fprintf(stderr, "\nend of attack");
+        PRINT(2, fprintf(stderr, "\nend of attack"));
         mode = Logic::RETURNTOGRID;
         ReturnToGridMode();
     } else {
-        fprintf(stderr, "\ncontinue");
+        PRINT(2, fprintf(stderr, "\ncontinue"));
         Vector2 point = attackPath.GetPoint();
         float dir_angle = GetMoveAngleSmooth(point.x, point.y);
         direction = Vector2Normalize(Vector2{std::cos(dir_angle), std::sin(dir_angle)});
-        fprintf(stderr, "\ndirection: %f,%f", direction.x, direction.y);
         MoveAmount(direction);
-        fprintf(stderr, "\ntarget x: %f - y: %f", point.x, point.y);
-        fprintf(stderr, "\nend x: %f - y: %f", location.x, location.y);
+        PRINT(2, fprintf(stderr, "\ndirection: %f,%f", direction.x, direction.y));
+        PRINT(2, fprintf(stderr, "\ntarget x: %f - y: %f", point.x, point.y));
+        PRINT(2, fprintf(stderr, "\nend x: %f - y: %f", location.x, location.y));
     }
+
+#if MODE > 1
+    attackPath.ShowPath();
+#endif
 }
 
 void Enemy::MakeAttack() {
-    fprintf(stderr, "\nMake Attack");
-    mode = Logic::EnemyMode::ATTACK;
-    attackPath.Reset();
-    moving = true;
+    if (!moving) {
+        PRINT(2, fprintf(stderr, "\nMake Attack"));
+        mode = Logic::EnemyMode::ATTACK;
+        attackPath.Reset();
+        moving = true;
+        hasDropedBomb = false;
+    }
 }
 
 float Enemy::GetMoveAngleSmooth(float x, float y) {
     float dir_angle = std::atan2(direction.y, direction.x);
-    // fprintf(stderr, "\ndir_angleS %f", dir_angle);
+    PRINT(2, fprintf(stderr, "\ndir_angleS %f", dir_angle));
     float target_angel = std::atan2(y - location.y, x - location.x);
 
     float dif_angle = target_angel - dir_angle;
-    // fprintf(stderr, "\n\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
+    PRINT(2,
+          fprintf(stderr, "\n\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle));
 
     Color color;
     if (dif_angle > 3.14159) {
@@ -276,7 +236,7 @@ float Enemy::GetMoveAngleSmooth(float x, float y) {
         // right
     }
 
-#if MODE == 1
+#if MODE > 1
     DrawCircle(location.x, location.y, 20, color);
 #endif
 
@@ -290,7 +250,7 @@ float Enemy::GetMoveAngleSmooth(float x, float y) {
 
     dir_angle += dif_angle;
 
-#if MODE == 1
+#if MODE > 1
     fprintf(stderr, "\ndir: %f, target: %f, dif: %f", dir_angle, target_angel, dif_angle);
     DrawCircle(location.x, location.y, 10, color);
     DrawLine(location.x, location.y, location.x + std::cos(target_angel) * 20,
@@ -305,4 +265,11 @@ float Enemy::GetMoveAngleSmooth(float x, float y) {
 void Enemy::SetInGrid() {
     mode = Logic::EnemyMode::INGRID;
     LocateInGrid();
+}
+
+void Enemy::SetGameSize(int width, int height) {
+    gameWidth = width;
+    gameHeight = height;
+
+    UpdateAttackPath();
 }

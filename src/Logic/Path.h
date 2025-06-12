@@ -2,6 +2,7 @@
 #define PATH_H_
 
 #include "raylib.h"
+#include <stdio.h>
 #include <vector>
 
 namespace Logic {

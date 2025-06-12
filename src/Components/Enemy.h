@@ -16,10 +16,9 @@
 namespace Components {
 
 class Enemy {
-  private:
-    Texture2D butterfly1;
-    Texture2D butterfly2;
-    Texture2D images[2];
+    // private:
+  protected:
+    int gameWidth = 900, gameHeight = 700;
     std::shared_ptr<Logic::Physics> physics;
     Vector2 location;
     Vector2 direction;
@@ -32,6 +31,7 @@ class Enemy {
     float spawnTime;
     float imageTime;
     int imageIndex = 0;
+    bool hasDropedBomb = false;
     Rectangle src;
     Rectangle dest;
     Vector2 origin;
@@ -49,15 +49,19 @@ class Enemy {
     void MoveTo(Vector2);
     void InitAttackPath();
     float GetMoveAngleSmooth(float, float);
+    virtual void UpdateAttackPath() = 0;
+
+    Texture2D images[2];
 
   public:
+    virtual void LoadTexture() = 0;
     Rectangle hitbox;
 
     Enemy(Levels::LocationInGrid, Vector2);
-    ~Enemy();
+    virtual ~Enemy();
     Vector2 GetLocation() { return location; };
     void SetLocation(Vector2);
-    void Draw();
+    virtual void Draw() = 0;
     void SetDestroy() { destroy = true; };
     bool ShouldDestroy() { return destroy; };
     bool IsMoving() { return moving; };
@@ -71,6 +75,9 @@ class Enemy {
     Vector2 GetCorner(int);
     void MakeAttack();
     void SetInGrid();
+    bool HasDropedBomb() { return hasDropedBomb; };
+    void SetHasDropedBomb(bool var) { hasDropedBomb = var; };
+    void SetGameSize(int, int);
 };
 } // namespace Components
 

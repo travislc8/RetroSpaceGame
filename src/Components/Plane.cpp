@@ -69,7 +69,7 @@ void Plane::Draw() {
     }
     if (!destroy) {
         DrawTexture(plane, points[0].x - (planeWidth / 2.0f) - 1, points[0].y, WHITE);
-#if MODE == 1
+#if MODE > 1
         DrawTriangle(points[0], points[1], points[2], BLUE);
 #endif
     }

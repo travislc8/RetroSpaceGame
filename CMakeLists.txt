@@ -79,4 +79,5 @@ target_link_libraries(main PRIVATE OpenGL::GL)
 #-lopengl32 -lgdi32 -lwinmm
 
 # debug level
-add_compile_definitions(MODE=2)
+# 0 none - 1 Shortcuts - 2 Visuals - 3 stderr writing
+add_compile_definitions(MODE=1)

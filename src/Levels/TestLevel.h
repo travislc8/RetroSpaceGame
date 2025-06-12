@@ -1,7 +1,9 @@
 #ifndef _TESTLEVEL_H_
 #define _TESTLEVEL_H_
 
+#include "../Components/Bombs.h"
 #include "../Components/Enemy.h"
+#include "../Logic/EnemyType.h"
 #include "../Logic/Path.h"
 #include "LevelUtils.h"
 #include "raylib.h"
@@ -24,6 +26,7 @@ enum LevelState {
 
 class TestLevel {
   private:
+    bool gameOver = false;
     float minGridX, maxGridX;
     float levelHeight, levelWidth;
     LocationInGrid gridState;
@@ -33,12 +36,16 @@ class TestLevel {
     double lastSpawnTime;
     int rowCount = 8;
     int columnCount = 2;
+    int maxEnemyAttacking = 2;
+    int maxBombs = 2;
     std::list<Components::Enemy*> enemyList;
+    Components::Bombs bombs;
     short gridDirection = 1;
     int spawnCount = 0;
-    int movingEnemyCount = 0;
+    int bombChance = 10;
+    int attackChance = 128;
+    std::vector<Components::Enemy*> movingEnemy;
     LevelState state = LOADING;
-    float timeInEnemyInGrid;
 
     Logic::Path enemyEntryPath;
     Logic::Path enemyEntryPath2;
@@ -46,7 +53,7 @@ class TestLevel {
     void ShiftEnemy();
     void UpdateGridPosition();
     void SetEnemyEntryPath();
-    void AddEnemy(std::shared_ptr<Logic::Physics>);
+    void AddEnemy(std::shared_ptr<Logic::Physics>, Logic::EnemyType);
     void SetEnemy();
     void SpawnEnemy();
     void EnemyEntryState();
@@ -62,7 +69,9 @@ class TestLevel {
     void Update();
     void Draw();
     std::list<Components::Enemy*> GetEnemyList() { return enemyList; }
+    std::list<Components::Bomb*> GetBombList() { return bombs.GetBombs(); }
     void Remove(Components::Enemy*);
+    void EndGame();
 };
 
 } // namespace Levels

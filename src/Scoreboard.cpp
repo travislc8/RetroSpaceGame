@@ -17,6 +17,7 @@ Scoreboard::Scoreboard(Vector2 origin, float width, float height) {
 }
 
 void Scoreboard::Draw() {
+    DrawRectangle(origin.x, origin.y, width, height, BLACK);
     DrawLine(origin.x, origin.y, origin.x, origin.y + height, WHITE);
 
     std::string score_string = "Score: ";

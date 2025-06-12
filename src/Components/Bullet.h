@@ -1,8 +1,9 @@
 #ifndef _BULLET_H_
 #define _BULLET_H_
 #include "raylib.h"
+
+#define BULLETSPEED 720
 namespace Components {
-const int BULLETSPEED = 720;
 class Bullet {
   private:
     bool destroy = false;

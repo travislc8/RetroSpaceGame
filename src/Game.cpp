@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "Components/Bomb.h"
 #include "Components/Bullet.h"
 #include "Components/Bullets.h"
 #include "Components/Enemy.h"
@@ -9,6 +10,7 @@
 #include <list>
 
 Game::Game() {
+    SetRandomSeed(GetTime());
     gameWidth = GetScreenWidth() - SCOREBOARDSIZE;
     gameHeight = GetScreenHeight();
     plane = new Components::Plane(gameWidth, gameHeight);
@@ -26,12 +28,18 @@ Game::~Game() {
 }
 
 void Game::Update() {
-    KeyInput();
+    if (!gameOver) {
+        KeyInput();
+        CheckBombs();
+        CheckCollisions();
+    }
     bullets.Update();
     level->Update();
     CheckBullets();
-    CheckBombs();
-    CheckCollisions();
+
+    if (!(scoreboard->GetLives() > 0)) {
+        EndGame();
+    }
 }
 
 void Game::Draw() {
@@ -40,6 +48,10 @@ void Game::Draw() {
     plane->Draw();
     level->Draw();
     scoreboard->Draw();
+
+    if (gameOver) {
+        DrawText("Game Over", gameWidth / 2 - 100, gameHeight / 2, 20, WHITE);
+    }
 }
 
 void Game::KeyInput() {
@@ -73,7 +85,37 @@ void Game::CheckBullets() {
     }
 };
 
-void Game::CheckBombs() {}
+void Game::CheckBombs() {
+    std::list<Components::Bomb*> bombList = level->GetBombList();
+    bool collision;
+    if (!plane->ShouldDestroy()) {
+        for (auto bomb : bombList) {
+            collision = false;
+            if (CheckCollisionPointTriangle(bomb->GetCorner(0), plane->GetPoint(0),
+                                            plane->GetPoint(1), plane->GetPoint(2))) {
+                collision = true;
+            } else if (CheckCollisionPointTriangle(bomb->GetCorner(1), plane->GetPoint(0),
+                                                   plane->GetPoint(1), plane->GetPoint(2))) {
+                collision = true;
+            } else if (CheckCollisionPointTriangle(bomb->GetCorner(2), plane->GetPoint(0),
+                                                   plane->GetPoint(1), plane->GetPoint(2))) {
+                collision = true;
+            } else if (CheckCollisionPointTriangle(bomb->GetCorner(3), plane->GetPoint(0),
+                                                   plane->GetPoint(1), plane->GetPoint(2))) {
+                collision = true;
+            }
+
+            if (collision) {
+                scoreboard->RemoveLife();
+                bomb->SetDestroy();
+                plane->SetDestroy();
+                if (scoreboard->GetLives() < 0) {
+                    exit(4);
+                }
+            }
+        }
+    }
+}
 
 void Game::CheckCollisions() {
     std::list<Components::Enemy*> enemyList = level->GetEnemyList();
@@ -105,4 +147,9 @@ void Game::CheckCollisions() {
             }
         }
     }
+}
+
+void Game::EndGame() {
+    gameOver = true;
+    level->EndGame();
 }
