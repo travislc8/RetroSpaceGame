@@ -35,12 +35,12 @@ class TestLevel {
     int spawnCount = 0; // how many enemy have been spawned
     int bombChance = 10;
     int attackChance = 128;
-    LevelState state = LOADING;
+    LevelState state = LOADING; // which state the level is in
 
     float minGridX, maxGridX;
     float levelHeight, levelWidth;
     LocationInGrid gridState;
-    Vector2 gridVector;
+    Vector2 gridVector; // the top right corner of the grid
     double startTime;
     double lastShiftTime;
     double lastSpawnTime;
@@ -52,17 +52,34 @@ class TestLevel {
     Logic::Path enemyEntryPath2;
     Components::Bombs bombs;
 
+    /**
+     * Shifts the each individual enemies grid location by the same amount
+     */
     void ShiftEnemy();
+    /**
+     * Updates the grid location so that it shifts a small amount at time intervals
+     */
     void UpdateGridPosition();
+    /**
+     * Sets the entry paths that can be used in the level
+     */
     void SetEnemyEntryPath();
+    /**
+     * Adds a new enemy of the specified type with the given physics
+     */
     void AddEnemy(std::shared_ptr<Logic::Physics>, Logic::EnemyType);
+    /**
+     * Sets the enemy for the level
+     */
     void SetEnemy();
-    void SpawnEnemy();
+    /**
+     * Creates an attack with a random enemy
+     */
+    void CreateAttack();
     void EnemyEntryState();
     void LevelCompleteState();
     void EnemyInGridState();
     void EnemyAttackingState();
-    void CreateAttack();
 
   public:
     TestLevel(float, float);
