@@ -11,17 +11,8 @@ int main() {
     // ToggleFullscreen();
     HideCursor();
 
-    SetRandomSeed(GetTime());
     Game* game = new Game();
-    while (!WindowShouldClose()) {
-        if (!IsKeyPressed(KEY_P)) {
-            BeginDrawing();
-            ClearBackground(BLACK);
-            game->Update();
-            game->Draw();
-            EndDrawing();
-        }
-    }
+    game->Run();
 
     delete game;
     CloseWindow();

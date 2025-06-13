@@ -153,3 +153,13 @@ void Game::EndGame() {
     gameOver = true;
     level->EndGame();
 }
+
+void Game::Run() {
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+        ClearBackground(BLACK);
+        Update();
+        Draw();
+        EndDrawing();
+    }
+}

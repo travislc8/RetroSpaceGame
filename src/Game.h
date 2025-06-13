@@ -26,12 +26,13 @@ class Game {
     void CheckBombs();
     void CheckCollisions();
     void EndGame();
+    void Update();
+    void Draw();
 
   public:
     Game();
     ~Game();
-    void Update();
-    void Draw();
+    void Run();
 };
 
 #endif

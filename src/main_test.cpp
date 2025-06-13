@@ -31,7 +31,6 @@ void main_test() {
 
     Game* game = new Game();
     while (!WindowShouldClose()) {
-        game->Draw();
         // Update
         //----------------------------------------------------------------------------------
         // Player movement

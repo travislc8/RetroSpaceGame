@@ -43,12 +43,9 @@ void Fly::Draw() {
         if (rotation < 0) {
             rotation = 360 + rotation;
         }
-        fprintf(stderr, "\nDrawing");
         if (images[imageIndex].id == 0) {
             DrawRectangleRec(hitbox, ORANGE);
         } else {
-            PRINT(0, fprintf(stderr, "\nSrc: %f, dest: %f, origin: %f, rotation: %f", src.x, dest.x,
-                             origin.x, rotation));
             DrawTexturePro(images[imageIndex], src, dest, origin, rotation, WHITE);
             // DrawTexture(images[imageIndex], location.x, location.y, WHITE);
         }
