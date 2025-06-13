@@ -1,3 +1,7 @@
 namespace Logic {
-enum EnemyType { BUTTERFLY, FLY };
+enum EnemyType {
+    BUTTERFLY,
+    FLY,
+    CRAB,
+};
 }

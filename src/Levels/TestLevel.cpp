@@ -1,5 +1,6 @@
 #include "TestLevel.h"
 #include "../Components/Butterfly.h"
+#include "../Components/Crab.h"
 #include "../Components/Enemy.h"
 #include "../Components/Fly.h"
 #include "../Debug.h"
@@ -98,6 +99,10 @@ void TestLevel::AddEnemy(std::shared_ptr<Logic::Physics> physics, Logic::EnemyTy
         enemy = new Components::Fly(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
                                                        (float)(ENEMYSPACING * gridState.row)});
         break;
+    case Logic::CRAB:
+        enemy = new Components::Crab(gridState, Vector2{(float)(ENEMYSPACING * gridState.column),
+                                                        (float)(ENEMYSPACING * gridState.row)});
+        break;
     }
     enemy->LoadTexture();
     enemy->SetGameSize(levelWidth, levelHeight);
@@ -122,10 +127,11 @@ void TestLevel::SetEnemy() {
     std::shared_ptr<Logic::Physics> physics = std::make_shared<Logic::Physics>();
     physics->SetSpeed(350);
     physics->SetTurnSpeed(.2f);
-    AddEnemy(physics, Logic::BUTTERFLY);
 
     while (gridState.row < 5) {
-        if (gridState.row % 2 == 0) {
+        if (gridState.row == 0) {
+            AddEnemy(physics, Logic::CRAB);
+        } else if (gridState.row % 2 == 0) {
             AddEnemy(physics, Logic::BUTTERFLY);
         } else if (gridState.row % 2 == 1) {
             AddEnemy(physics, Logic::FLY);
