@@ -27,6 +27,16 @@ enum LevelState {
 class TestLevel {
   private:
     bool gameOver = false;
+    int gridDirection = 1; // direction the grid if shifting
+    int rowCount = 4;
+    int columnCount = 16;
+    int maxEnemyAttacking = 3;
+    int maxBombs = 2;
+    int spawnCount = 0; // how many enemy have been spawned
+    int bombChance = 10;
+    int attackChance = 128;
+    LevelState state = LOADING;
+
     float minGridX, maxGridX;
     float levelHeight, levelWidth;
     LocationInGrid gridState;
@@ -34,21 +44,13 @@ class TestLevel {
     double startTime;
     double lastShiftTime;
     double lastSpawnTime;
-    int rowCount = 8;
-    int columnCount = 2;
-    int maxEnemyAttacking = 2;
-    int maxBombs = 2;
+
     std::list<Components::Enemy*> enemyList;
-    Components::Bombs bombs;
-    short gridDirection = 1;
-    int spawnCount = 0;
-    int bombChance = 10;
-    int attackChance = 128;
     std::vector<Components::Enemy*> movingEnemy;
-    LevelState state = LOADING;
 
     Logic::Path enemyEntryPath;
     Logic::Path enemyEntryPath2;
+    Components::Bombs bombs;
 
     void ShiftEnemy();
     void UpdateGridPosition();
@@ -60,7 +62,6 @@ class TestLevel {
     void LevelCompleteState();
     void EnemyInGridState();
     void EnemyAttackingState();
-
     void CreateAttack();
 
   public:

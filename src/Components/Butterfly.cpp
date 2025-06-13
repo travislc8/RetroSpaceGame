@@ -30,15 +30,6 @@ void Butterfly::Draw() {
 #if MODE > 1
         DrawRectangleRec(hitbox, RED);
 #endif
-        if (GetTime() - imageTime > .5f) {
-            if (imageIndex == 1) {
-                imageIndex = 0;
-            } else {
-                imageIndex = 1;
-            }
-            imageTime = GetTime();
-        }
-
         dest.x = location.x;
         dest.y = location.y;
         assert(dest.x == location.x);

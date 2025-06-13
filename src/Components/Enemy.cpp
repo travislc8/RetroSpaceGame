@@ -273,3 +273,11 @@ void Enemy::SetGameSize(int width, int height) {
 
     UpdateAttackPath();
 }
+
+void Enemy::ImageUpdate() {
+    if (imageIndex == 1) {
+        imageIndex = 0;
+    } else {
+        imageIndex = 1;
+    }
+}

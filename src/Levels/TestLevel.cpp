@@ -15,7 +15,7 @@ TestLevel::TestLevel(float width, float height) {
     PRINT(0, fprintf(stderr, "\nTestLevelStart"));
     levelWidth = width;
     levelHeight = height;
-    maxGridX = width - 50 - (rowCount * ENEMYSPACING);
+    maxGridX = width - 50 - (columnCount * ENEMYSPACING);
     minGridX = 0 + 50.0f;
     gridState = LocationInGrid{0, 0, minGridX, 50.0f};
     gridVector = Vector2{minGridX, 50.0f};
@@ -128,7 +128,7 @@ void TestLevel::SetEnemy() {
     physics->SetSpeed(350);
     physics->SetTurnSpeed(.2f);
 
-    while (gridState.row < 5) {
+    while (gridState.row < rowCount) {
         if (gridState.row == 0) {
             AddEnemy(physics, Logic::CRAB);
         } else if (gridState.row % 2 == 0) {
@@ -136,7 +136,7 @@ void TestLevel::SetEnemy() {
         } else if (gridState.row % 2 == 1) {
             AddEnemy(physics, Logic::FLY);
         }
-        if (gridState.column > 8) {
+        if (gridState.column > columnCount) {
             gridState.column = 0;
             gridState.row += 1;
             gridState.y += ENEMYSPACING;
@@ -165,10 +165,13 @@ void TestLevel::Update() {
     if (enemyList.size() == 0) {
         state = LevelState::COMPLETE;
     }
+
+    bool update = false;
     if ((GetTime() - lastShiftTime) > .5f) {
         lastShiftTime = GetTime();
         UpdateGridPosition();
         ShiftEnemy();
+        update = true;
     }
 
     movingEnemy.clear();
@@ -182,6 +185,8 @@ void TestLevel::Update() {
             if ((*it)->IsMoving()) {
                 movingEnemy.push_back((*it));
             }
+            if (update)
+                (*it)->ImageUpdate();
             it++;
         }
     }

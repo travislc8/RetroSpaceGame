@@ -29,7 +29,6 @@ class Enemy {
     Vector2 offset;
     Logic::Path entryPath;
     float spawnTime;
-    float imageTime;
     int imageIndex = 0;
     bool hasDropedBomb = false;
     Rectangle src;
@@ -78,6 +77,7 @@ class Enemy {
     bool HasDropedBomb() { return hasDropedBomb; };
     void SetHasDropedBomb(bool var) { hasDropedBomb = var; };
     void SetGameSize(int, int);
+    void ImageUpdate();
 };
 } // namespace Components
 
