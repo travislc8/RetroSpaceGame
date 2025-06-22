@@ -30,11 +30,11 @@ class TestLevel {
     int gridDirection = 1; // direction the grid if shifting
     int rowCount = 4;
     int columnCount = 16;
-    int maxEnemyAttacking = 3;
+    int maxEnemyAttacking = 5;
+    int attackChance = 60;
     int maxBombs = 2;
     int spawnCount = 0; // how many enemy have been spawned
     int bombChance = 10;
-    int attackChance = 128;
     LevelState state = LOADING; // which state the level is in
 
     float minGridX, maxGridX;

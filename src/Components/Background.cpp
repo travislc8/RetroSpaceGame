@@ -3,7 +3,6 @@
 
 namespace Components {
 Background::Background(float screenWidth, float screenHeight) {
-    SetRandomSeed(GetTime());
     for (int i = 0; i < STARCOUNT; i++) {
         stars1[i] =
             Vector2{(float)GetRandomValue(0, screenWidth), (float)GetRandomValue(0, screenHeight)};
